@@ -1,6 +1,7 @@
 package df.open.spring.service.impl;
 
 import df.open.spring.service.ProxyService;
+import df.open.spring.service.Response;
 
 /**
  * 说明:
@@ -22,7 +23,7 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public Integer getAge(Long id, String name) {
+    public Response<String> getAge(Long id, String code, String name) {
         return null;
     }
 

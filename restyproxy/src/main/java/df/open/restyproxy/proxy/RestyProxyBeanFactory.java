@@ -1,9 +1,8 @@
-package df.open.spring.proxy;
+package df.open.restyproxy.proxy;
 
 import lombok.Data;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.Proxy;
@@ -22,7 +21,7 @@ import java.lang.reflect.Proxy;
  * @date 2016/11/22
  */
 @Data
-public class InterfaceBeanFactory implements FactoryBean<Object>, InitializingBean {
+public class RestyProxyBeanFactory implements FactoryBean<Object>, InitializingBean {
 
     private Class<?> type;
 
@@ -45,7 +44,7 @@ public class InterfaceBeanFactory implements FactoryBean<Object>, InitializingBe
     protected Object createProxy(Class type) {
         Object proxy = null;
         try {
-            DefaultInterfaceIvkHandler interfaceIvkHandler = new DefaultInterfaceIvkHandler();
+            DefaultRestyProxyInvokeHandler interfaceIvkHandler = new DefaultRestyProxyInvokeHandler();
 
             proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, interfaceIvkHandler);
         } catch (Exception e) {

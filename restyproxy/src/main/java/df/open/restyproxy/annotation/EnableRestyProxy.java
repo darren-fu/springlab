@@ -1,5 +1,6 @@
-package df.open.spring.proxy;
+package df.open.restyproxy.annotation;
 
+import df.open.restyproxy.proxy.RestyProxyRegister;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -21,8 +22,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import(InterfaceProxyRegister.class)
-public @interface EnableInterfaceProxy {
+@Import(RestyProxyRegister.class)
+public @interface EnableRestyProxy {
 
     String value() default "";
 
