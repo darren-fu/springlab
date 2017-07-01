@@ -6,26 +6,29 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 /**
  * Created by darrenfu on 17-6-19.
  */
-public class AsyncHttpConfig {
+public class AsyncHttpConfigFactory {
 
-    private static AsyncHttpClientConfig clientConfig;
 
-    static {
-
-        clientConfig = new DefaultAsyncHttpClientConfig.Builder()
+    /**
+     * 生成默认的httpclient config
+     *
+     * @return the config
+     */
+    public static AsyncHttpClientConfig getConfig() {
+        return new DefaultAsyncHttpClientConfig.Builder()
                 .setConnectTimeout(5000)
                 .setMaxConnectionsPerHost(10000)
                 .setValidateResponseHeaders(false)
                 .build();
-
     }
 
-    public static AsyncHttpClientConfig getConfig() {
-        return clientConfig;
-    }
-
+    /**
+     * Refresh config async http client config.
+     *
+     * @return the async http client config
+     */
     public static AsyncHttpClientConfig refreshConfig() {
-        return clientConfig;
+        return null;
     }
 
 

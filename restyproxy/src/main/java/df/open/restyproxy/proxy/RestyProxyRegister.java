@@ -1,9 +1,8 @@
 package df.open.restyproxy.proxy;
 
 import df.open.restyproxy.annotation.EnableRestyProxy;
-import df.open.restyproxy.annotation.RestyMethod;
 import df.open.restyproxy.annotation.RestyService;
-import df.open.restyproxy.base.MethodMetaDataContext;
+import df.open.restyproxy.base.RestyCommandContext;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -16,15 +15,9 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -37,10 +30,10 @@ import java.util.Set;
  * Company:
  * <p/>
  *
- * @author darren-fu
+ * @author darren -fu
  * @version 1.0.0
  * @contact 13914793391
- * @date 2016/11/22
+ * @date 2016 /11/22
  */
 public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
         ResourceLoaderAware, BeanClassLoaderAware {
@@ -62,7 +55,7 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         try {
-
+            RestyCommandContext commandContext = RestyCommandContext.getInstance();
             Map<String, Object> attrs = importingClassMetadata.getAnnotationAttributes(EnableRestyProxy.class.getName());
 
             // TODO 处理类注解
@@ -70,26 +63,27 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
 
             ////////////////////////////////////////////////////////
             ClassPathScanningCandidateComponentProvider scanner = getScanner();
-//        scanner.addIncludeFilter();
             Set<String> basePackages = getBasePackages(importingClassMetadata);
+
             for (String basePackage : basePackages) {
                 Set<BeanDefinition> components = scanner.findCandidateComponents(basePackage);
+
+
                 for (BeanDefinition component : components) {
                     if (component instanceof ScannedGenericBeanDefinition) {
                         ScannedGenericBeanDefinition definition = (ScannedGenericBeanDefinition) component;
 
                         BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(RestyProxyBeanFactory.class);
                         beanDefinitionBuilder.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-                        Class beanCLz = Class.forName(component.getBeanClassName());
-                        beanDefinitionBuilder.addPropertyValue("type", beanCLz);
+                        Class beanClz = Class.forName(component.getBeanClassName());
+                        commandContext.initContextForService(beanClz);
 
+                        beanDefinitionBuilder.addPropertyValue("type", beanClz);
+                        beanDefinitionBuilder.addPropertyValue("restyCommandContext", commandContext);
 
                         // 注册bean
                         registry.registerBeanDefinition(component.getBeanClassName(), beanDefinitionBuilder.getBeanDefinition());
-
                     }
-
-
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -97,6 +91,11 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
         }
     }
 
+    /**
+     * Gets scanner.
+     *
+     * @return the scanner
+     */
     protected ClassPathScanningCandidateComponentProvider getScanner() {
         ClassPathScanningCandidateComponentProvider scan = new CustomClassPathScanningCandidateComponentProvider(false);
         scan.addIncludeFilter((metadataReader, metadataReaderFactory) -> metadataReader.getClassMetadata().isInterface()
@@ -105,6 +104,12 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
     }
 
 
+    /**
+     * Gets base packages.
+     *
+     * @param importingClassMetadata the importing class metadata
+     * @return the base packages
+     */
     protected Set<String> getBasePackages(AnnotationMetadata importingClassMetadata) {
         Map<String, Object> attributes = importingClassMetadata
                 .getAnnotationAttributes(EnableRestyProxy.class.getCanonicalName());
@@ -133,6 +138,11 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
 
     private static class CustomClassPathScanningCandidateComponentProvider extends ClassPathScanningCandidateComponentProvider {
 
+        /**
+         * Instantiates a new Custom class path scanning candidate component provider.
+         *
+         * @param useDefaultFilters the use default filters
+         */
         CustomClassPathScanningCandidateComponentProvider(boolean useDefaultFilters) {
             super(useDefaultFilters);
         }
@@ -144,21 +154,4 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
         }
     }
 
-
-    private void parserClassAndMethdoAnnotation(Class beanClz) {
-        RestyService annotation = (RestyService) beanClz.getDeclaredAnnotation(RestyService.class);
-        MethodMetaDataContext.storeRestyService(beanClz.getTypeName(), annotation);
-
-
-        for (Method method : beanClz.getMethods()) {
-            RestyMethod restyMethod = method.getDeclaredAnnotation(RestyMethod.class);
-            if (restyMethod == null) {
-
-            }
-            MethodMetaDataContext.storeRestyMethod(method, restyMethod);
-
-
-        }
-
-    }
 }

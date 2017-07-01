@@ -31,4 +31,9 @@ public class ProxyServiceImpl implements ProxyService {
     public int getHeight(Long id) {
         return 0;
     }
+
+    @Override
+    public void applicationIndex() {
+
+    }
 }

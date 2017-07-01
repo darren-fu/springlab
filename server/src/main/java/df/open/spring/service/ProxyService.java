@@ -20,29 +20,15 @@ import java.lang.reflect.Method;
  * @contact 13914793391
  * @date 2016/11/22
  */
-@RestyService(value = "resty")
-public interface ProxyService {
+@RestyService(serviceName = "resty")
+public interface ProxyService extends ApplicationService {
 
     @RestyMethod
     String getStatus();
 
-    @RestyMethod
-    Response<String> getAge(@RequestParam("id") Long id,String code, @PathVariable(value = "name") String name);
+    @RestyMethod(value = "/get/value")
+    Response<String> getAge(@RequestParam("id") Long id, String code, @PathVariable(value = "name") String name);
 
     int getHeight(Long id);
 
-
-    public static void main(String[] args) {
-        for (Method method : ProxyService.class.getMethods()) {
-            System.out.println(method);
-        }
-
-
-        System.out.println("=================");
-
-
-        for (Method method : ProxyService.class.getDeclaredMethods()) {
-            System.out.println(method);
-        }
-    }
 }

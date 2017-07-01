@@ -11,6 +11,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface RestyService {
 
-    String value() default "";
+    String serviceName() default "";
 
 }

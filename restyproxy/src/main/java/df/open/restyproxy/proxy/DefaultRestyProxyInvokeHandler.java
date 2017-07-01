@@ -1,7 +1,10 @@
 package df.open.restyproxy.proxy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyProxyProperties;
+import df.open.restyproxy.loadbalance.LoadBalancer;
+import df.open.restyproxy.loadbalance.LoadBalanceBuilder;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -23,22 +26,55 @@ import java.util.Arrays;
  * @date 2016/11/22
  */
 public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
+
+
+    private RestyCommandContext restyCommandContext;
+
+    public DefaultRestyProxyInvokeHandler(RestyCommandContext restyCommandContext) {
+        this.restyCommandContext = restyCommandContext;
+    }
+
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (isSpecialMethod(method)) {
             return handleSpecialMethod(proxy, method, args);
         }
+        System.out.println(restyCommandContext);
+
+
+        RestyCommand restyCommand = new DefaultRestyCommand(method.getDeclaringClass(),
+                method,
+                method.getGenericReturnType(),
+                args,
+                restyCommandContext);
+
+
+        LoadBalancer loadBalancer = LoadBalanceBuilder.createRandomLoadBalancer();
 
 
 
-        System.out.println("method.getClass():" + method.getClass());
-        System.out.println("method.getName():" + method.getName());
-        System.out.println("method.getGenericReturnType():" + method.getGenericReturnType());
-        System.out.println("method.getParameterCount():" + method.getParameterCount());
-        System.out.println("method.getParameterTypes():" + Arrays.toString(method.getParameterTypes()));
-        System.out.println("method.getParameters():" + Arrays.toString(method.getParameters()));
 
-        System.out.println("method.getDeclaredAnnotations():" + Arrays.toString(method.getDeclaredAnnotations()));
+
+
+
+
+
+
+
+
+
+
+
+
+        System.out.println("serviceMethod.getClass():" + method.getClass());
+        System.out.println("serviceMethod.getName():" + method.getName());
+        System.out.println("serviceMethod.getGenericReturnType():" + method.getGenericReturnType());
+        System.out.println("serviceMethod.getParameterCount():" + method.getParameterCount());
+        System.out.println("serviceMethod.getParameterTypes():" + Arrays.toString(method.getParameterTypes()));
+        System.out.println("serviceMethod.getParameters():" + Arrays.toString(method.getParameters()));
+
+        System.out.println("serviceMethod.getDeclaredAnnotations():" + Arrays.toString(method.getDeclaredAnnotations()));
         Type returnType = method.getGenericReturnType();
         // SpringMvcContract
         for (Object arg : args) {
@@ -48,7 +84,6 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
         System.out.println("###########################################");
         return handleReturnValue(returnType);
     }
-
 
 
     private Object handleReturnValue(Type returnType) {
@@ -71,11 +106,6 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
                 return null;
         }
     }
-
-
-
-
-
 
 
     private boolean isSpecialMethod(Method method) {

@@ -1,27 +1,26 @@
 package df.open.restyproxy.proxy;
 
-import lombok.Data;
-import org.asynchttpclient.Request;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.net.URL;
 
 /**
- * Created by darrenfu on 17-6-20.
+ * Created by darrenfu on 17-6-26.
  */
-@Data
-public class RestyCommand {
+public interface RestyCommand {
 
-    private String serviceName;
+    String getPath();
 
-    private Method method;
+    String getMethod();
 
-    private Type returnType;
+    String getServiceName();
 
-    private Object[] args;
+    Method getServiceMethod();
 
-    private Request request;
+    Type getReturnType();
 
-    private RestyCommandProperties commandProperties;
+    Object[] getArgs();
+
+    RestyCommandConfig getRestyCommandConfig();
 
 }
