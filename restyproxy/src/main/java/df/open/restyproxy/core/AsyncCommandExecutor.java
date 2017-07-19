@@ -3,6 +3,8 @@ package df.open.restyproxy.core;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import df.open.restyproxy.base.RestyCommandContext;
+import df.open.restyproxy.http.converter.JsonResponseConverter;
+import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.StringResponseConverter;
 import df.open.restyproxy.loadbalance.LoadBalancer;
 import df.open.restyproxy.loadbalance.ServerContext;
@@ -13,7 +15,9 @@ import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -37,9 +41,16 @@ public class AsyncCommandExecutor implements CommandExecutor {
      */
     private ServerContext serverContext;
 
+
+    private List<ResponseConverter> converterList;
+
     public AsyncCommandExecutor(RestyCommandContext context, ServerContext serverContext) {
         this.context = context;
         this.serverContext = serverContext;
+
+        this.converterList = new ArrayList<>();
+        converterList.add(new JsonResponseConverter());
+        converterList.add(new StringResponseConverter());
     }
 
 
@@ -65,24 +76,25 @@ public class AsyncCommandExecutor implements CommandExecutor {
 
             byte[] body = response.getResponseBodyAsBytes();
 
-            StringResponseConverter converter = new StringResponseConverter();
-
-            if (converter.support(restyCommand.getReturnType(), response.getContentType())) {
-                result = converter.convert(body, restyCommand.getReturnType());
-
-            } else {
-                JavaType type = TypeFactory.defaultInstance().constructType(restyCommand.getReturnType());
-                result = JsonTools.defaultMapper().getMapper().readValue(body, type);
-
+            boolean converted = false;
+            for (ResponseConverter converter : converterList) {
+                if (converter.support(restyCommand.getReturnType(), response.getContentType())) {
+                    converted = true;
+                    result = converter.convert(body, restyCommand.getReturnType(), response.getContentType());
+                    break;
+                }
+            }
+            if (!converted) {
+                throw new RuntimeException("没有合适的响应解析器:" + restyCommand);
             }
 
-
-        } catch (InterruptedException | ExecutionException | IOException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
         return result;
     }
+
 
     private void buildRequest(ServerInstance instance, RestyCommand restyCommand) {
 

@@ -27,7 +27,7 @@ public class StringResponseConverter implements ResponseConverter<String> {
     }
 
     @Override
-    public String convert(byte[] body, Type type) {
-        return new String(body, charset);
+    public String convert(byte[] body, Type type, String contentType) {
+        return new String(body, getCharset(contentType));
     }
 }
