@@ -1,5 +1,9 @@
 package df.open.restyproxy.proxy;
 
+import df.open.restyproxy.base.RestyRequestTemplate;
+import df.open.restyproxy.loadbalance.ServerInstance;
+import org.asynchttpclient.uri.Uri;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -9,9 +13,12 @@ import java.net.URL;
  */
 public interface RestyCommand {
 
+    String HTTP = "http";
+    String HTTPS = "https";
+
     String getPath();
 
-    String getMethod();
+    String getHttpMethod();
 
     String getServiceName();
 
@@ -23,4 +30,7 @@ public interface RestyCommand {
 
     RestyCommandConfig getRestyCommandConfig();
 
+    Uri getUri(ServerInstance serverInstance);
+
+    RestyRequestTemplate getRequestTemplate();
 }

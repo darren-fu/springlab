@@ -44,9 +44,18 @@ public class ServerApplication implements EmbeddedServletContainerCustomizer {
 //        container.setPort(7200);
     }
 
-    @RequestMapping("/rest")
+    @RequestMapping("/status")
     public String rest() {
+
+        return proxyService.getStatus();
+    }
+
+    @RequestMapping("/age")
+    public String getAge() {
         String res = "rrrrrrrr";
+//        proxyService.getList();
+
+
 //        System.out.println(res);
 //        System.out.println(interfaceProxyConfig.getName());
 //        System.out.println(proxyService.getStatus());

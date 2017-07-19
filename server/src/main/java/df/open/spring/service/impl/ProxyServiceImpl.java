@@ -1,7 +1,10 @@
 package df.open.spring.service.impl;
 
+import df.open.spring.service.Data;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
+
+import java.util.List;
 
 /**
  * 说明:
@@ -19,6 +22,11 @@ import df.open.spring.service.Response;
 public class ProxyServiceImpl implements ProxyService {
     @Override
     public String getStatus() {
+        return null;
+    }
+
+    @Override
+    public List<Data> getList() {
         return null;
     }
 

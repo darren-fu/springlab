@@ -3,8 +3,13 @@ package df.open.restyproxy.proxy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyProxyProperties;
+import df.open.restyproxy.core.AsyncCommandExecutor;
+import df.open.restyproxy.core.CommandExecutor;
 import df.open.restyproxy.loadbalance.LoadBalancer;
 import df.open.restyproxy.loadbalance.LoadBalanceBuilder;
+import df.open.restyproxy.loadbalance.ServerContext;
+import df.open.restyproxy.loadbalance.ServerContextBuilder;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -42,6 +47,13 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
         }
         System.out.println(restyCommandContext);
 
+        Type type = method.getGenericReturnType();
+
+        System.out.println("type:" + type);
+//        ParameterizedTypeImpl ptype = ((ParameterizedTypeImpl) type);
+//
+//        System.out.println(ptype);
+
 
         RestyCommand restyCommand = new DefaultRestyCommand(method.getDeclaringClass(),
                 method,
@@ -50,21 +62,10 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
                 restyCommandContext);
 
 
+        ServerContext serverContext = ServerContextBuilder.createConfigableServerContext();
         LoadBalancer loadBalancer = LoadBalanceBuilder.createRandomLoadBalancer();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        CommandExecutor commandExecutor = new AsyncCommandExecutor(restyCommandContext, serverContext);
+        Object result = commandExecutor.execute(loadBalancer, restyCommand);
 
 
         System.out.println("serviceMethod.getClass():" + method.getClass());
@@ -77,12 +78,12 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
         System.out.println("serviceMethod.getDeclaredAnnotations():" + Arrays.toString(method.getDeclaredAnnotations()));
         Type returnType = method.getGenericReturnType();
         // SpringMvcContract
-        for (Object arg : args) {
-            System.out.println("arg.annotation: " + Arrays.toString(arg.getClass().getDeclaredAnnotations()));
-        }
+//        for (Object arg : args) {
+//            System.out.println("arg.annotation: " + Arrays.toString(arg.getClass().getDeclaredAnnotations()));
+//        }
 
         System.out.println("###########################################");
-        return handleReturnValue(returnType);
+        return result;
     }
 
 

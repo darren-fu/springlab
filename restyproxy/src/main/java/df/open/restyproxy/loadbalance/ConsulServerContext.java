@@ -41,7 +41,8 @@ public class ConsulServerContext {
             instance.setStartTime(new Date());
             try {
                 URL url = new URL(instance.isHttps() ? "HTTPS" : "HTTP", instance.getHost(), instance.getPort(), "");
-                instance.setUrl(url);
+//                instance.setUrl(url);
+//                instance.setUri();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }

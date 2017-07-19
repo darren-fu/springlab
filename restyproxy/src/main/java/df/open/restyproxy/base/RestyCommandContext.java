@@ -7,7 +7,8 @@ import df.open.restyproxy.annotation.processor.RestyServiceProcessor;
 import df.open.restyproxy.http.client.HttpClientHolder;
 import df.open.restyproxy.http.config.AsyncHttpConfigFactory;
 import df.open.restyproxy.proxy.RestyCommandConfig;
-import df.open.restyproxy.wrapper.spring.RequestMappingWrapper;
+import df.open.restyproxy.wrapper.spring.RequestMappingProcessor;
+import df.open.restyproxy.wrapper.spring.SpringAnnotationWrapper;
 import org.asynchttpclient.AsyncHttpClient;
 
 import java.lang.reflect.Method;
@@ -83,7 +84,7 @@ public class RestyCommandContext {
 
 
     /**
-     * 为service创建对应的RestyProperties
+     * 为service创建Resty配置
      *
      * @param serviceClz the service clz
      */
@@ -97,20 +98,18 @@ public class RestyCommandContext {
         httpClientPool.putIfAbsent(restyService.serviceName(), clientHolder);
 
 
-        RequestMappingWrapper wrapper = new RequestMappingWrapper();
+        SpringAnnotationWrapper wrapper = new SpringAnnotationWrapper();
 
         for (Method method : serviceClz.getMethods()) {
-            //存储 method 和 restyCommandConfig
+            //存储 httpMethod 和 restyCommandConfig
             RestyCommandConfig commandProperties = processRestyAnnotation(restyService, method);
             commandPropertiesMap.putIfAbsent(method, commandProperties);
 
-            // 存储 method 和 requestTemplate
+            // 存储 httpMethod 和 requestTemplate
             RestyRequestTemplate restyRequestTemplate = wrapper.processAnnotation(serviceClz, method);
             requestTemplateMap.put(method, restyRequestTemplate);
-
         }
-        System.out.println("###############");
-
+        System.out.println("RestyCommandContext初始化成功！");
     }
 
     /**
@@ -133,6 +132,12 @@ public class RestyCommandContext {
         return commandProperties;
     }
 
+    /**
+     * Gets command properties.
+     *
+     * @param method the httpMethod
+     * @return the command properties
+     */
     public RestyCommandConfig getCommandProperties(Method method) {
         return commandPropertiesMap.get(method);
     }
@@ -149,6 +154,12 @@ public class RestyCommandContext {
     }
 
 
+    /**
+     * Gets http client.
+     *
+     * @param serviceName the service name
+     * @return the http client
+     */
     public AsyncHttpClient getHttpClient(String serviceName) {
         HttpClientHolder clientHolder = httpClientPool.get(serviceName);
         if (clientHolder == null) {
@@ -158,6 +169,12 @@ public class RestyCommandContext {
     }
 
 
+    /**
+     * Gets request template.
+     *
+     * @param restyMethod the resty httpMethod
+     * @return the request template
+     */
     public RestyRequestTemplate getRequestTemplate(Method restyMethod) {
         return requestTemplateMap.get(restyMethod);
     }

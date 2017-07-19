@@ -64,8 +64,7 @@ public class ServerInstance {
      */
     private Map<String, String> props;
 
-    public static final String HTTP = "http";
-    public static final String HTTPS = "https";
+
 
     public static ServerInstance buildInstance(String serviceName, String host, Integer port) {
         ServerInstance instance = new ServerInstance();
@@ -77,13 +76,9 @@ public class ServerInstance {
         instance.setAlive(true);
         instance.setRoom(RestyConsts.ROOM_DEFAULT);
         instance.setHttps(false);
-
         return instance;
     }
 
-    public Uri buildAsyncUri(String path, String query) {
-        return new Uri(isHttps ? HTTPS : HTTP, null, host, port, path, query);
-    }
 
 
 }

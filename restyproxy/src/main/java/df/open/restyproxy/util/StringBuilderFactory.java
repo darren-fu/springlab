@@ -1,8 +1,7 @@
 package df.open.restyproxy.util;
 
-import org.asynchttpclient.util.StringBuilderPool;
-
 /**
+ * StringBuilder工厂类
  * Created by darrenfu on 17-7-1.
  */
 public class StringBuilderFactory {

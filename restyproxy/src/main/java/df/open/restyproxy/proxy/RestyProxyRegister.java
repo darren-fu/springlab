@@ -61,21 +61,21 @@ public class RestyProxyRegister implements ImportBeanDefinitionRegistrar,
             // TODO 处理类注解
             System.out.println(attrs.get("value"));
 
-            ////////////////////////////////////////////////////////
+            // bean搜索器
             ClassPathScanningCandidateComponentProvider scanner = getScanner();
             Set<String> basePackages = getBasePackages(importingClassMetadata);
 
             for (String basePackage : basePackages) {
+                // 搜索符合条件的bean
                 Set<BeanDefinition> components = scanner.findCandidateComponents(basePackage);
-
 
                 for (BeanDefinition component : components) {
                     if (component instanceof ScannedGenericBeanDefinition) {
-                        ScannedGenericBeanDefinition definition = (ScannedGenericBeanDefinition) component;
 
                         BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(RestyProxyBeanFactory.class);
                         beanDefinitionBuilder.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
                         Class beanClz = Class.forName(component.getBeanClassName());
+                        // 分析类元数据，并存储到RestyCommandContext中
                         commandContext.initContextForService(beanClz);
 
                         beanDefinitionBuilder.addPropertyValue("type", beanClz);

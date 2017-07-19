@@ -18,5 +18,5 @@ public interface CommandExecutor {
      * @param restyCommand the resty command
      * @return the t
      */
-    <T> T execute(LoadBalancer lb, RestyCommand restyCommand);
+    Object execute(LoadBalancer lb, RestyCommand restyCommand);
 }
