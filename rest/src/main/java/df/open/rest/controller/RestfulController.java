@@ -2,8 +2,12 @@ package df.open.rest.controller;
 
 import com.netflix.loadbalancer.ILoadBalancer;
 import df.open.rest.entity.Response;
+import df.open.rest.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by darrenfu on 17-6-19.
@@ -32,6 +36,17 @@ public class RestfulController {
     @RequestMapping(value = "/get_status", method = RequestMethod.GET)
     public String getStatus() {
         return "Status is OK";
+    }
+
+    @RequestMapping
+    public List<User> getList() {
+        User user = new User("darren");
+        try {
+            Thread.sleep(1000*60);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return Collections.singletonList(user);
     }
 
     @RequestMapping(value = "/get_age", method = RequestMethod.GET)

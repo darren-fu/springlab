@@ -1,7 +1,10 @@
 package df.open.spring;
 
 import df.open.restyproxy.annotation.EnableRestyProxy;
+import df.open.restyproxy.core.RestyFuture;
 import df.open.spring.service.ProxyService;
+import df.open.spring.service.Response;
+import df.open.spring.service.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -10,6 +13,9 @@ import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletCont
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * 说明:
@@ -35,7 +41,6 @@ public class ServerApplication implements EmbeddedServletContainerCustomizer {
     public static void main(String[] args) {
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder();
         appBuilder.sources(ServerApplication.class);
-//        appBuilder.run(new String[]{"--debug"});
         appBuilder.run();
     }
 
@@ -46,21 +51,20 @@ public class ServerApplication implements EmbeddedServletContainerCustomizer {
 
     @RequestMapping("/status")
     public String rest() {
-
         return proxyService.getStatus();
     }
 
-    @RequestMapping("/age")
-    public String getAge() {
-        String res = "rrrrrrrr";
-//        proxyService.getList();
-
-
-//        System.out.println(res);
-//        System.out.println(interfaceProxyConfig.getName());
-//        System.out.println(proxyService.getStatus());
-        System.out.println(proxyService.getAge(10L, "code", "test"));
-//        System.out.println(proxyService.getHeight(10L));
-        return res;
+    @RequestMapping(value = "/list")
+    public List<User> getList() throws ExecutionException, InterruptedException {
+//        List<User> list = proxyService.getList();
+        return proxyService.getList();
     }
+
+
+    @RequestMapping("/age")
+    public Response<String> getAge() {
+        return proxyService.getAge(10L, "code", "test");
+    }
+
+
 }

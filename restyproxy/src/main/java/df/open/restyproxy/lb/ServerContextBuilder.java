@@ -1,4 +1,4 @@
-package df.open.restyproxy.loadbalance;
+package df.open.restyproxy.lb;
 
 /**
  * Created by darrenfu on 17-6-28.

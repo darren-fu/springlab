@@ -1,7 +1,7 @@
 package df.open.restyproxy.core;
 
-import df.open.restyproxy.loadbalance.LoadBalancer;
-import df.open.restyproxy.proxy.RestyCommand;
+import df.open.restyproxy.lb.LoadBalancer;
+import df.open.restyproxy.command.RestyCommand;
 
 /**
  * 执行器

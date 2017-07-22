@@ -7,15 +7,11 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static df.open.restyproxy.util.CommonTools.emptyToNull;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.springframework.core.annotation.AnnotatedElementUtils.findMergedAnnotation;
 
 /**
@@ -62,9 +58,15 @@ public class SpringAnnotationWrapper {
         if (methodRequestMapping != null) {
             requestMappingProcessor.process(requestTemplate, methodRequestMapping);
         }
-        requestTemplate.setPath(requestTemplate.getBaseUrl() + requestTemplate.getMethodUrl());
+        processTemplatePath(requestTemplate);
 
         return requestTemplate;
+    }
+
+
+    private void processTemplatePath(RestyRequestTemplate requestTemplate) {
+        requestTemplate.setPath(defaultIfEmpty(requestTemplate.getBaseUrl(), "")
+                + defaultIfEmpty(requestTemplate.getMethodUrl(), ""));
     }
 
     /**

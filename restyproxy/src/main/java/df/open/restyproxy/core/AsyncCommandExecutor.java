@@ -1,24 +1,21 @@
 package df.open.restyproxy.core;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
+import df.open.restyproxy.http.converter.ResponseConverterContext;
 import df.open.restyproxy.http.converter.StringResponseConverter;
-import df.open.restyproxy.loadbalance.LoadBalancer;
-import df.open.restyproxy.loadbalance.ServerContext;
-import df.open.restyproxy.loadbalance.ServerInstance;
-import df.open.restyproxy.proxy.RestyCommand;
-import df.open.restyproxy.util.JsonTools;
+import df.open.restyproxy.lb.LoadBalancer;
+import df.open.restyproxy.lb.ServerContext;
+import df.open.restyproxy.lb.ServerInstance;
+import df.open.restyproxy.command.RestyCommand;
+import df.open.restyproxy.util.FutureTools;
 import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * 异步Resty请求执行器
@@ -56,7 +53,13 @@ public class AsyncCommandExecutor implements CommandExecutor {
 
     @Override
     public Object execute(LoadBalancer lb, RestyCommand restyCommand) {
-        Object result = null;
+
+        //TODO 熔断判断
+        // 0.command = path + serviceName
+        // 1.判断command使用的serverInstanceList是否存在被熔断的server
+        // 1.1 存在的话 server加入 loadBalance 的excludeServerList
+        //
+
 
         // 负载均衡器 选择可用服务实例
         ServerInstance serverInstance = lb.choose(serverContext, restyCommand, Collections.EMPTY_LIST);
@@ -67,35 +70,24 @@ public class AsyncCommandExecutor implements CommandExecutor {
         // 执行Resty请求
         ListenableFuture<Response> future = httpClient.executeRequest(this.request);
 
-        try {
-            Response response = future.get();
+        boolean isAsync = false;
 
-            if (response != null && 200 != response.getStatusCode()) {
-                throw new RuntimeException(response.getResponseBody());
-            }
-
-            byte[] body = response.getResponseBodyAsBytes();
-
-            boolean converted = false;
-            for (ResponseConverter converter : converterList) {
-                if (converter.support(restyCommand.getReturnType(), response.getContentType())) {
-                    converted = true;
-                    result = converter.convert(body, restyCommand.getReturnType(), response.getContentType());
-                    break;
-                }
-            }
-            if (!converted) {
-                throw new RuntimeException("没有合适的响应解析器:" + restyCommand);
-            }
-
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        if (!isAsync) {
+            Response response = FutureTools.fetchResponse(future);
+            Object restyResult = ResponseConverterContext.DEFAULT.convertResponse(restyCommand, response);
+            return restyResult;
+        } else {
+            RestyFuture restyFuture = new RestyFuture(restyCommand, future, ResponseConverterContext.DEFAULT);
+            return restyFuture;
         }
-
-        return result;
     }
 
-
+    /**
+     * 构建Request
+     *
+     * @param instance
+     * @param restyCommand
+     */
     private void buildRequest(ServerInstance instance, RestyCommand restyCommand) {
 
         BoundRequestBuilder requestBuilder = new BoundRequestBuilder(context.getHttpClient(restyCommand.getServiceName()),

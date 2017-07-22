@@ -17,6 +17,7 @@ public class AsyncHttpConfigFactory {
     public static AsyncHttpClientConfig getConfig() {
         return new DefaultAsyncHttpClientConfig.Builder()
                 .setConnectTimeout(5000)
+                .setRequestTimeout(10000)
                 .setMaxConnectionsPerHost(10000)
                 .setValidateResponseHeaders(false)
                 .build();

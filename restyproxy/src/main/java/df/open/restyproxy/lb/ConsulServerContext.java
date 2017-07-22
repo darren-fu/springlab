@@ -1,4 +1,4 @@
-package df.open.restyproxy.loadbalance;
+package df.open.restyproxy.lb;
 
 import df.open.restyproxy.base.RestyConsts;
 import org.springframework.cloud.client.ServiceInstance;

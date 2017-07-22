@@ -1,17 +1,14 @@
-package df.open.restyproxy.proxy;
+package df.open.restyproxy.command;
 
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyRequestTemplate;
-import df.open.restyproxy.loadbalance.ServerInstance;
+import df.open.restyproxy.lb.ServerInstance;
 import df.open.restyproxy.util.StringBuilderFactory;
 import lombok.Data;
-import org.asynchttpclient.BoundRequestBuilder;
-import org.asynchttpclient.Request;
 import org.asynchttpclient.uri.Uri;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.net.URL;
 import java.util.Set;
 
 /**
@@ -134,5 +131,37 @@ public class DefaultRestyCommand implements RestyCommand {
             i = 1;
         }
         return sb.toString();
+    }
+
+
+    @Override
+    public RestyCommandStatus getStatus() {
+
+        return null;
+    }
+
+    @Override
+    public void ready() {
+
+    }
+
+    @Override
+    public void start() {
+
+    }
+
+    @Override
+    public void success() {
+
+    }
+
+    @Override
+    public void failed(Exception executeException) {
+
+    }
+
+    @Override
+    public Exception getFailException() {
+        return null;
     }
 }

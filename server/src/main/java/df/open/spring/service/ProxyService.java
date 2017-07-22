@@ -31,8 +31,9 @@ public interface ProxyService extends ApplicationService {
     @RequestMapping(value = "/get_status", method = RequestMethod.GET, headers = "Client=RestyProxy", params = "Param1=val1")
     String getStatus();
 
-    @RestyMethod
-    List<Data> getList();
+    @RestyMethod()
+    @RequestMapping
+    List<User> getList();
 
     @RestyMethod(value = "/get/value")
     @RequestMapping(value = "/get_age", method = RequestMethod.GET)

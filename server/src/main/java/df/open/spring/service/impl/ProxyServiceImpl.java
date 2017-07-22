@@ -3,6 +3,7 @@ package df.open.spring.service.impl;
 import df.open.spring.service.Data;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
+import df.open.spring.service.User;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public List<Data> getList() {
+    public List<User> getList() {
         return null;
     }
 

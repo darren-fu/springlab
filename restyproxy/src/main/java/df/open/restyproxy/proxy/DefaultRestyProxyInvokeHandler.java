@@ -3,19 +3,24 @@ package df.open.restyproxy.proxy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyProxyProperties;
+import df.open.restyproxy.command.DefaultRestyCommand;
+import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.core.AsyncCommandExecutor;
 import df.open.restyproxy.core.CommandExecutor;
-import df.open.restyproxy.loadbalance.LoadBalancer;
-import df.open.restyproxy.loadbalance.LoadBalanceBuilder;
-import df.open.restyproxy.loadbalance.ServerContext;
-import df.open.restyproxy.loadbalance.ServerContextBuilder;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
+import df.open.restyproxy.http.converter.JsonResponseConverter;
+import df.open.restyproxy.http.converter.ResponseConverter;
+import df.open.restyproxy.http.converter.StringResponseConverter;
+import df.open.restyproxy.lb.LoadBalancer;
+import df.open.restyproxy.lb.LoadBalanceBuilder;
+import df.open.restyproxy.lb.ServerContext;
+import df.open.restyproxy.lb.ServerContextBuilder;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 说明:
@@ -35,8 +40,13 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
 
     private RestyCommandContext restyCommandContext;
 
+    private List<ResponseConverter> converterList;
+
     public DefaultRestyProxyInvokeHandler(RestyCommandContext restyCommandContext) {
         this.restyCommandContext = restyCommandContext;
+        this.converterList = new ArrayList<>();
+        converterList.add(new JsonResponseConverter());
+        converterList.add(new StringResponseConverter());
     }
 
 
@@ -45,15 +55,8 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
         if (isSpecialMethod(method)) {
             return handleSpecialMethod(proxy, method, args);
         }
-        System.out.println(restyCommandContext);
 
-        Type type = method.getGenericReturnType();
-
-        System.out.println("type:" + type);
-//        ParameterizedTypeImpl ptype = ((ParameterizedTypeImpl) type);
-//
-//        System.out.println(ptype);
-
+        Object result;
 
         RestyCommand restyCommand = new DefaultRestyCommand(method.getDeclaringClass(),
                 method,
@@ -61,29 +64,14 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
                 args,
                 restyCommandContext);
 
-
         ServerContext serverContext = ServerContextBuilder.createConfigableServerContext();
         LoadBalancer loadBalancer = LoadBalanceBuilder.createRandomLoadBalancer();
         CommandExecutor commandExecutor = new AsyncCommandExecutor(restyCommandContext, serverContext);
-        Object result = commandExecutor.execute(loadBalancer, restyCommand);
+        result = commandExecutor.execute(loadBalancer, restyCommand);
 
-
-        System.out.println("serviceMethod.getClass():" + method.getClass());
-        System.out.println("serviceMethod.getName():" + method.getName());
-        System.out.println("serviceMethod.getGenericReturnType():" + method.getGenericReturnType());
-        System.out.println("serviceMethod.getParameterCount():" + method.getParameterCount());
-        System.out.println("serviceMethod.getParameterTypes():" + Arrays.toString(method.getParameterTypes()));
-        System.out.println("serviceMethod.getParameters():" + Arrays.toString(method.getParameters()));
-
-        System.out.println("serviceMethod.getDeclaredAnnotations():" + Arrays.toString(method.getDeclaredAnnotations()));
-        Type returnType = method.getGenericReturnType();
-        // SpringMvcContract
-//        for (Object arg : args) {
-//            System.out.println("arg.annotation: " + Arrays.toString(arg.getClass().getDeclaredAnnotations()));
-//        }
-
-        System.out.println("###########################################");
         return result;
+
+        //TODO method返回基本类型，如果返回的是null会报错，待验证
     }
 
 

@@ -1,7 +1,7 @@
 package df.open.restyproxy.annotation.processor;
 
 import df.open.restyproxy.annotation.RestyService;
-import df.open.restyproxy.proxy.RestyCommandConfig;
+import df.open.restyproxy.command.RestyCommandConfig;
 
 import java.lang.annotation.Annotation;
 

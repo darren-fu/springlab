@@ -1,4 +1,4 @@
-package df.open.restyproxy.loadbalance;
+package df.open.restyproxy.lb;
 
 import java.util.List;
 

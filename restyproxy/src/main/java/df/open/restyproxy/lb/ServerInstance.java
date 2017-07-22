@@ -1,11 +1,9 @@
-package df.open.restyproxy.loadbalance;
+package df.open.restyproxy.lb;
 
 import df.open.restyproxy.base.RestyConsts;
 import lombok.Data;
 import org.asynchttpclient.uri.Uri;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
 import java.util.Map;
 
@@ -78,7 +76,6 @@ public class ServerInstance {
         instance.setHttps(false);
         return instance;
     }
-
 
 
 }

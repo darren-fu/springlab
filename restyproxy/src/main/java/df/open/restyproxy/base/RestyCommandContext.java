@@ -6,8 +6,7 @@ import df.open.restyproxy.annotation.processor.RestyMethodProcessor;
 import df.open.restyproxy.annotation.processor.RestyServiceProcessor;
 import df.open.restyproxy.http.client.HttpClientHolder;
 import df.open.restyproxy.http.config.AsyncHttpConfigFactory;
-import df.open.restyproxy.proxy.RestyCommandConfig;
-import df.open.restyproxy.wrapper.spring.RequestMappingProcessor;
+import df.open.restyproxy.command.RestyCommandConfig;
 import df.open.restyproxy.wrapper.spring.SpringAnnotationWrapper;
 import org.asynchttpclient.AsyncHttpClient;
 

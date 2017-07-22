@@ -1,4 +1,4 @@
-package df.open.restyproxy.proxy;
+package df.open.restyproxy.command;
 
 /**
  * Created by darrenfu on 17-6-21.
