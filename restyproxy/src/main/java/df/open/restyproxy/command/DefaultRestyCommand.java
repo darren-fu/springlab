@@ -2,9 +2,12 @@ package df.open.restyproxy.command;
 
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyRequestTemplate;
+import df.open.restyproxy.cb.CircuitBreaker;
+import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.lb.ServerInstance;
 import df.open.restyproxy.util.StringBuilderFactory;
 import lombok.Data;
+import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
 
 import java.lang.reflect.Method;
@@ -74,6 +77,14 @@ public class DefaultRestyCommand implements RestyCommand {
     private String serviceName;
 
 
+    private RestyCommandStatus status;
+
+    private RestyException exception;
+
+    private Request request;
+
+    private CircuitBreaker circuitBreaker;
+
     public DefaultRestyCommand(Class serviceClz,
                                Method serviceMethod,
                                Type returnTyp,
@@ -84,6 +95,7 @@ public class DefaultRestyCommand implements RestyCommand {
         this.returnType = returnTyp;
         this.args = args;
         this.context = context;
+        this.status = RestyCommandStatus.INIT;
 
         if (context.getCommandProperties(serviceMethod) == null) {
             throw new RuntimeException("缺少CommandProperties，无法初始化RestyCommand");
@@ -137,31 +149,55 @@ public class DefaultRestyCommand implements RestyCommand {
     @Override
     public RestyCommandStatus getStatus() {
 
-        return null;
+        return this.status;
     }
 
     @Override
-    public void ready() {
+    public RestyCommand ready(CircuitBreaker cb) {
 
+        this.circuitBreaker = cb;
+        this.status = status = RestyCommandStatus.READY;
+        return this;
     }
 
     @Override
-    public void start() {
-
+    public ListenableFuture<Response> start(ServerInstance instance) {
+        this.status = RestyCommandStatus.STARTED;
+        boolean shouldBreak = circuitBreaker.shouldBreak(this, instance);
+        // TODO fallback
+        AsyncHttpClient httpClient = context.getHttpClient(this.getServiceName());
+        BoundRequestBuilder requestBuilder = new BoundRequestBuilder(httpClient,
+                httpMethod,
+                true);
+        requestBuilder.setUri(getUri(instance));
+        requestBuilder.setSingleHeaders(getRequestTemplate().getHeaders());
+        this.request = requestBuilder.build();
+        ListenableFuture<Response> future = httpClient.executeRequest(request);
+        return future;
     }
 
     @Override
-    public void success() {
+    public RestyCommand success() {
+        // TODO 事件 eventEmit
 
+        this.status = RestyCommandStatus.SUCCESS;
+        circuitBreaker.update(this);
+        return this;
     }
 
     @Override
-    public void failed(Exception executeException) {
-
+    public RestyCommand failed(RestyException restyException) {
+        this.exception = restyException;
+        this.status = RestyCommandStatus.FAILED;
+        circuitBreaker.update(this);
+        return this;
     }
+
 
     @Override
     public Exception getFailException() {
         return null;
     }
+
+  
 }

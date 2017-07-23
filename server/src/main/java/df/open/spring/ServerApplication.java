@@ -1,7 +1,6 @@
 package df.open.spring;
 
 import df.open.restyproxy.annotation.EnableRestyProxy;
-import df.open.restyproxy.core.RestyFuture;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
 import df.open.spring.service.User;

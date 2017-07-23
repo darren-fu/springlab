@@ -1,6 +1,7 @@
 package df.open.restyproxy.command;
 
 import df.open.restyproxy.base.RestyRequestTemplate;
+import df.open.restyproxy.event.EventEmit;
 import df.open.restyproxy.lb.ServerInstance;
 import org.asynchttpclient.uri.Uri;
 
@@ -11,7 +12,7 @@ import java.lang.reflect.Type;
  * Resty请求命令
  * Created by darrenfu on 17-6-26.
  */
-public interface RestyCommand extends RestyCommandLifeCycle {
+public interface RestyCommand extends RestyCommandLifeCycle, EventEmit {
 
     /**
      * HTTP

@@ -1,5 +1,12 @@
 package df.open.restyproxy.command;
 
+import df.open.restyproxy.base.RestyCommandContext;
+import df.open.restyproxy.cb.CircuitBreaker;
+import df.open.restyproxy.exception.RestyException;
+import df.open.restyproxy.lb.ServerInstance;
+import org.asynchttpclient.ListenableFuture;
+import org.asynchttpclient.Response;
+
 /**
  * RestyCommand生命周期
  * Created by darrenfu on 17-7-22.
@@ -15,26 +22,35 @@ public interface RestyCommandLifeCycle {
 
 
     /**
-     * Ready.
+     * 准备状态，设置熔断器， 申请HttpClient
+     *
+     * @param cb the cb
+     * @return the resty command life cycle
      */
-    void ready();
+    RestyCommandLifeCycle ready(CircuitBreaker cb);
 
     /**
-     * Start.
+     * 开始请求.
+     *
+     * @param instance the instance
+     * @return the listenable future
      */
-    void start();
+    ListenableFuture<Response> start(ServerInstance instance);
 
     /**
      * RestyCommand执行成功
+     *
+     * @return the resty command life cycle
      */
-    void success();
+    RestyCommandLifeCycle success();
 
     /**
      * RestyCommand执行失败
      *
-     * @param executeException the execute exception
+     * @param RestyException the resty exception
+     * @return the resty command life cycle
      */
-    void failed(Exception executeException);
+    RestyCommandLifeCycle failed(RestyException RestyException);
 
 
     /**

@@ -12,7 +12,8 @@ public interface CircuitBreaker {
 
     boolean shouldBreak(RestyCommand restyCommand, ServerInstance serverInstance);
 
-    List<String> getBreakedServer();
+    List<String> getBrokenServer();
 
     void update(RestyCommand restyCommand);
+
 }

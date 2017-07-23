@@ -1,6 +1,10 @@
 package df.open.restyproxy.core;
 
 import df.open.restyproxy.base.RestyCommandContext;
+import df.open.restyproxy.cb.CircuitBreaker;
+import df.open.restyproxy.cb.DefaultCircuitBreaker;
+import df.open.restyproxy.command.RestyFuture;
+import df.open.restyproxy.event.EventConsumer;
 import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
@@ -9,6 +13,7 @@ import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.lb.ServerContext;
 import df.open.restyproxy.lb.ServerInstance;
 import df.open.restyproxy.command.RestyCommand;
+import df.open.restyproxy.util.ClassTools;
 import df.open.restyproxy.util.FutureTools;
 import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
@@ -63,14 +68,22 @@ public class AsyncCommandExecutor implements CommandExecutor {
 
         // 负载均衡器 选择可用服务实例
         ServerInstance serverInstance = lb.choose(serverContext, restyCommand, Collections.EMPTY_LIST);
-        this.buildRequest(serverInstance, restyCommand);
+//        this.buildRequest(serverInstance, restyCommand);
         // 获取分配的异步连接池
-        AsyncHttpClient httpClient = context.getHttpClient(restyCommand.getServiceName());
+//        AsyncHttpClient httpClient = context.getHttpClient(restyCommand.getServiceName());
 
         // 执行Resty请求
-        ListenableFuture<Response> future = httpClient.executeRequest(this.request);
+//        ListenableFuture<Response> future = httpClient.executeRequest(this.request);
+
+
+        ListenableFuture<Response> future = restyCommand.ready(null)
+                .start(serverInstance);
 
         boolean isAsync = false;
+
+        CircuitBreaker cb = new DefaultCircuitBreaker();
+        EventConsumer consumer = ClassTools.castTo(cb, EventConsumer.class);
+        restyCommand.emit(consumer.getEventKey(), restyCommand);
 
         if (!isAsync) {
             Response response = FutureTools.fetchResponse(future);

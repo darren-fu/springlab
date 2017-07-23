@@ -1,8 +1,7 @@
-package df.open.restyproxy.core;
+package df.open.restyproxy.command;
 
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
-import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.util.FutureTools;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
