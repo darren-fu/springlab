@@ -7,7 +7,6 @@ import df.open.restyproxy.command.RestyCommandStatus;
 import df.open.restyproxy.event.EventConsumer;
 import df.open.restyproxy.exception.RequestException;
 import df.open.restyproxy.lb.ServerInstance;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,8 +23,12 @@ import java.util.concurrent.locks.ReentrantLock;
 @ToString(exclude = {"commandQueue", "halfOpenLock"})
 @Slf4j
 public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
-    private static final String KEY_PREFIX = "Breaker-";
-    private String eventKey;
+
+    /**
+     * key:[RestyCommand#path, ServerInstance#instanceId, segmentKey]
+     */
+    private static Table<String, String, String> keyTable = HashBasedTable.create();
+
 
     private static Integer maxSegmentSize = 10;
 
@@ -34,16 +37,16 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
 
     private static Long halfOpenMilliseconds = 1000 * 10L;
 
-    private ReentrantLock halfOpenLock = new ReentrantLock();
+    private static final String KEY_PREFIX = "Breaker-";
 
-    /**
-     * key:[RestyCommand#path, ServerInstance#instanceId, segmentKey]
-     */
-    private static Table<String, String, String> keyTable = HashBasedTable.create();
+    private String eventKey;
+
+    private ReentrantLock halfOpenLock;
+
     /**
      * 统计结果缓冲区 segmentKey->Deque
      */
-    private ConcurrentHashMap<String, Deque<Segment>> segmentMap;
+    private ConcurrentHashMap<String, Deque<Metrics>> segmentMap;
 
     /**
      * 记录短路状态 segmentKey->Status
@@ -53,7 +56,7 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
     /**
      * Command 阻塞队列
      */
-    private LinkedBlockingQueue<RestyCommand> commandQueue = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<RestyCommand> commandQueue;
 
     private Set<String> brokenServerSet;
 
@@ -80,9 +83,10 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
             this.segmentMap = new ConcurrentHashMap<>();
             this.statusMap = new ConcurrentHashMap<>();
             this.brokenServerSet = new CopyOnWriteArraySet<>();
+            this.commandQueue = new LinkedBlockingQueue<>();
+            this.halfOpenLock = new ReentrantLock();
             this.registerEvent();
             this.startTask();
-            System.out.println("STARTED##");
         }
     }
 
@@ -100,15 +104,15 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
 
         String segmentKey = getSegmentKey(restyCommand.getPath(), serverInstance.getInstanceId());
         // 获取统计段
-        Deque<Segment> segmentDeque = getSegmentDeque(segmentKey);
-        Segment first = segmentDeque.peekFirst();
+        Deque<Metrics> metricsDeque = getSegmentDeque(segmentKey);
+        Metrics first = metricsDeque.peekFirst();
         if (first == null) {
             return true;
         }
         boolean shouldPass = true;
 
         // 获取计数器
-        Segment.SegmentMetrics metrics = first.getFirstMetrics();
+        Metrics.SegmentMetrics metrics = first.getMetrics();
         // 计数器中失败数量和比例超过阀值，则触发短路判断
         if (metrics.failCount() >= breakFailCount && metrics.failPercentage() >= breakFailPercentage) {
             Status status = statusMap.get(segmentKey);
@@ -193,30 +197,32 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
                     for (RestyCommand restyCommand : commandList) {
                         String key = getSegmentKey(restyCommand.getPath(), restyCommand.getInstanceId());
                         // 获取 统计段所属队列
-                        Deque<Segment> segmentDeque = getSegmentDeque(key);
-                        Segment first = segmentDeque.peekFirst();
+                        Deque<Metrics> metricsDeque = getSegmentDeque(key);
+                        Metrics first = metricsDeque.peekFirst();
                         if (first == null) {
-                            first = new Segment();
-                            segmentDeque.addFirst(first);
+                            first = new Metrics();
+                            metricsDeque.addFirst(first);
                         }
 
                         boolean isSuccess = isSuccessCommand(restyCommand);
-
+                        boolean forceUseNewMetrics = false;
                         // 如果当前处在短路或半短路状态
-                        if ((statusMap.get(key) == Status.BREAK || statusMap.get(key) == Status.HALFOPEN)) {
+                        Status status = statusMap.get(key);
+                        if ((status == Status.BREAK || status == Status.HALFOPEN)) {
                             // 结果成功 则不再短路，打开断路器
                             if (isSuccess) {
                                 // 并使用一个新的计数器
-                                first.addFirstMetrics();
+                                forceUseNewMetrics = true;
                                 statusMap.put(key, Status.OPEN);
                             } else {
                                 // 否则恢复到短路状态
                                 statusMap.put(key, Status.BREAK);
                             }
                         }
-                        first.store(isSuccessCommand(restyCommand));
+                        first.store(isSuccess, forceUseNewMetrics);
                     }
-//                    System.out.println(first.getMetricsMap());
+                    log.debug("处理完成, 处理个数:{}，剩余:{}个", commandList.size(), commandQueue.size());
+
                 } catch (Exception ex) {
                     log.error("断路器RestyCommand处理失败:{}", ex);
                 }
@@ -261,11 +267,7 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
         }
         return segmentKey;
     }
-//
-//    private Deque<Segment> getSegmentDeque(RestyCommand restyCommand) {
-//        String key = getSegmentKey(restyCommand.getPath(), restyCommand.getInstanceId());
-//        return getSegmentDeque(key);
-//    }
+
 
     /**
      * 获取 segmentDeque
@@ -273,10 +275,10 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
      * @param segmentKey
      * @return
      */
-    private Deque<Segment> getSegmentDeque(String segmentKey) {
-        Deque<Segment> segmentsDeque = segmentMap.get(segmentKey);
+    private Deque<Metrics> getSegmentDeque(String segmentKey) {
+        Deque<Metrics> segmentsDeque = segmentMap.get(segmentKey);
         if (segmentsDeque == null) {
-            Deque<Segment> deque = new ConcurrentLinkedDeque<>();
+            Deque<Metrics> deque = new ConcurrentLinkedDeque<>();
             // putIfAbsent
             segmentsDeque = segmentMap.putIfAbsent(segmentKey, deque);
             if (segmentsDeque == null) {

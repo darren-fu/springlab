@@ -3,43 +3,54 @@ package df.open.restyproxy.cb;
 import df.open.restyproxy.util.CacheLongAdder;
 import lombok.ToString;
 
-import java.util.Date;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * 执行结果统计段
+ * 执行结果计数器
+ * 线程不安全
  * Created by darrenfu on 17-7-24.
  */
-public class Segment {
+public class Metrics {
 
+    /**
+     * The constant DEFAULT_PERIOD_MILLISECONDS.
+     */
+    public static final Long DEFAULT_PERIOD_MILLISECONDS = 1000 * 30L;
+    /**
+     * The constant DEFAULT_MAX_SEGMENT_NUMBER.
+     */
+    public static final Integer DEFAULT_MAX_SEGMENT_NUMBER = 10;
 
     private Deque<SegmentMetrics> metricsDeque;
 
-    /**
-     * 段开始时间
-     */
-    private Date start;
-
-    /**
-     * 段结束时间
-     */
-    private Date end;
+    private Long period;
+    private Integer maxSegmentNumber;
 
 
     /**
-     * Instantiates a new Segment.
+     * Instantiates a new Metrics.
      */
-    public Segment() {
-        this.start = new Date();
-        this.metricsDeque = new ConcurrentLinkedDeque<>();
-        SegmentMetrics newMetrics = new SegmentMetrics();
-        metricsDeque.addFirst(newMetrics);
+    public Metrics() {
+        this(DEFAULT_PERIOD_MILLISECONDS, DEFAULT_MAX_SEGMENT_NUMBER);
     }
 
-    private ReentrantLock lock = new ReentrantLock();
+    /**
+     * Instantiates a new Metrics.
+     *
+     * @param period           the period
+     * @param maxSegmentNumber the max segment number
+     */
+    public Metrics(Long period, Integer maxSegmentNumber) {
+        this.period = period;
+        this.maxSegmentNumber = maxSegmentNumber;
+        this.metricsDeque = new ConcurrentLinkedDeque<>();
+        SegmentMetrics newMetrics = new SegmentMetrics();
+        this.metricsDeque.addFirst(newMetrics);
+    }
+
 
     /**
      * Store segment metrics.
@@ -47,9 +58,13 @@ public class Segment {
      * @param success the success
      * @return the segment metrics
      */
-    public SegmentMetrics store(boolean success) {
-        SegmentMetrics firstMetrics = getFirstMetrics();
+    public SegmentMetrics store(boolean success, boolean forceUseNewMetrics) {
+        SegmentMetrics firstMetrics = getMetrics();
         if (success) {
+            // 成功的数据，判断是否需要生成新的计数器，失败的不需要
+            if (forceUseNewMetrics || firstMetrics.isOverTime()) {
+                firstMetrics = addMetrics();
+            }
             firstMetrics.success();
         } else {
             firstMetrics.fail();
@@ -62,9 +77,13 @@ public class Segment {
      *
      * @return the segment metrics
      */
-    public SegmentMetrics addFirstMetrics() {
-        SegmentMetrics newMetrics = new SegmentMetrics();
+    public SegmentMetrics addMetrics() {
+        SegmentMetrics newMetrics = new SegmentMetrics(this.period);
         metricsDeque.addFirst(newMetrics);
+        if (metricsDeque.size() > this.maxSegmentNumber) {
+            metricsDeque.removeFirst();
+
+        }
         return newMetrics;
     }
 
@@ -73,23 +92,11 @@ public class Segment {
      *
      * @return the first metrics
      */
-    public SegmentMetrics getFirstMetrics() {
+    public SegmentMetrics getMetrics() {
         SegmentMetrics metrics = this.metricsDeque.peekFirst();
         if (metrics == null) {
-            lock.lock();
-            try {
-                SegmentMetrics first = this.metricsDeque.peekFirst();
-                if (first != null) {
-                    metrics = first;
-                } else {
-                    SegmentMetrics newMetrics = new SegmentMetrics();
-                    metricsDeque.offerFirst(newMetrics);
-                    metrics = newMetrics;
-                }
-
-            } finally {
-                lock.unlock();
-            }
+            metrics = new SegmentMetrics(this.period);
+            metricsDeque.offerFirst(metrics);
         }
         return metrics;
     }
@@ -135,11 +142,22 @@ public class Segment {
          */
         private ReentrantLock lock;
 
+        private Long endline;
 
         /**
-         * Instantiates a new Segment metricsDeque.
+         * Instantiates a new Metrics metricsDeque.
          */
         public SegmentMetrics() {
+            this(DEFAULT_PERIOD_MILLISECONDS);
+        }
+
+
+        /**
+         * Instantiates a new Segment metrics.
+         *
+         * @param period the period
+         */
+        public SegmentMetrics(Long period) {
             this.total = new CacheLongAdder();
             this.fail = new CacheLongAdder();
             this.failPercentage = 0;
@@ -147,6 +165,7 @@ public class Segment {
             this.lastFail = null;
             this.failCount = null;
             this.lock = new ReentrantLock();
+            this.endline = System.currentTimeMillis() + period;
         }
 
         /**
@@ -205,6 +224,15 @@ public class Segment {
          */
         public Long last() {
             return this.last;
+        }
+
+        /**
+         * Is over time boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isOverTime() {
+            return System.currentTimeMillis() > this.endline;
         }
     }
 

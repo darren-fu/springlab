@@ -192,7 +192,6 @@ public class DefaultRestyCommand implements RestyCommand {
     @Override
     public RestyCommand success() {
         // TODO 事件 eventEmit
-
         this.status = RestyCommandStatus.SUCCESS;
         return this;
     }

@@ -41,7 +41,9 @@ public class EventBus {
                 consumerList.add(consumer);
             }
         }
-        log.debug("注册事件：{}成功", event);
+        if (log.isTraceEnabled()) {
+            log.trace("注册事件：{}成功", event);
+        }
     }
 
     /**
@@ -59,7 +61,9 @@ public class EventBus {
                 consumer.accept(obj);
             }
         }
-        log.debug("消费事件:{},参数:{}", event, obj);
+        if (log.isTraceEnabled()) {
+            log.trace("消费事件:{},参数:{}", event, obj);
+        }
     }
 
 }
