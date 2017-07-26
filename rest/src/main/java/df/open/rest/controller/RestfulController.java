@@ -41,11 +41,11 @@ public class RestfulController {
     @RequestMapping
     public List<User> getList() {
         User user = new User("darren");
-        try {
-            Thread.sleep(1000*60);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            Thread.sleep(1000*60);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         return Collections.singletonList(user);
     }
 

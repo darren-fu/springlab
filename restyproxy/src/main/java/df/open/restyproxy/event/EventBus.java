@@ -1,5 +1,7 @@
 package df.open.restyproxy.event;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -9,6 +11,7 @@ import java.util.function.Consumer;
  * 事件总线
  * Created by darrenfu on 17-7-23.
  */
+@Slf4j
 public class EventBus {
 
     private static ConcurrentHashMap<String, List<Consumer>> eventMap = new ConcurrentHashMap<>();
@@ -20,8 +23,6 @@ public class EventBus {
      * @param consumer the consumer
      */
     public static void registerEventAndConsumer(String event, Consumer consumer) {
-        //todo
-        System.out.println("register event :" + event);
         // 不存在 event
         if (!eventMap.containsKey(event)) {
             //
@@ -40,6 +41,7 @@ public class EventBus {
                 consumerList.add(consumer);
             }
         }
+        log.debug("注册事件：{}成功", event);
     }
 
     /**
@@ -52,12 +54,12 @@ public class EventBus {
     public static <T> void emitEvent(String event, T obj) {
 
         List<Consumer> consumers = eventMap.get(event);
-
         if (consumers != null && eventMap.size() > 0) {
             for (Consumer consumer : consumers) {
                 consumer.accept(obj);
             }
         }
+        log.debug("消费事件:{},参数:{}", event, obj);
     }
 
 }

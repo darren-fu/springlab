@@ -1,6 +1,10 @@
 package df.open.restyproxy.http.converter;
 
 import df.open.restyproxy.command.RestyCommand;
+import df.open.restyproxy.exception.RequestException;
+import df.open.restyproxy.exception.RestyException;
+import df.open.restyproxy.exception.ServerException;
+import df.open.restyproxy.http.pojo.FailedResponse;
 import org.asynchttpclient.Response;
 
 import java.lang.reflect.Type;
@@ -48,13 +52,32 @@ public class ResponseConverterContext {
     public Object convertResponse(RestyCommand restyCommand, Response response) {
 
         Object result = null;
+        // response 为null
+        if (response == null) {
+            restyCommand.failed(new ServerException("Failed to get response, it's null"));
+            return result;
 
-        if (response != null && 200 != response.getStatusCode()) {
-            throw new RuntimeException(response.getResponseBody());
         }
+        // response为FailedResponse， [connectException InterruptedException]  status 500
+        if (FailedResponse.isFailedResponse(response)) {
+            restyCommand.failed(FailedResponse.class.cast(response).getException());
+            return result;
+        }
+        // 服务响应了请求，但是不是200
+        int statusCode = response.getStatusCode();
+        if (200 != statusCode) {
+            if (statusCode >= 400 && statusCode < 500) {
+                restyCommand.failed(new RequestException(response.getResponseBody()));
+            } else if (statusCode >= 500) {
+                restyCommand.failed(new ServerException(response.getResponseBody()));
+            }
+            return result;
+        }
+
 
         byte[] body = response.getResponseBodyAsBytes();
 
+        // 使用转换器 转换响应结果   json->object
         boolean converted = false;
         Type returnType = restyCommand.getReturnType();
         String respContentType = response.getContentType();
@@ -66,8 +89,9 @@ public class ResponseConverterContext {
             }
         }
         if (!converted) {
-            throw new RuntimeException("没有合适的响应解析器:" + restyCommand);
+            restyCommand.failed(new RestyException(response.getResponseBody()));
         }
+        restyCommand.success();
         return result;
     }
 

@@ -5,7 +5,7 @@ import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyProxyProperties;
 import df.open.restyproxy.command.DefaultRestyCommand;
 import df.open.restyproxy.command.RestyCommand;
-import df.open.restyproxy.core.AsyncCommandExecutor;
+import df.open.restyproxy.core.RestyCommandExecutor;
 import df.open.restyproxy.core.CommandExecutor;
 import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
@@ -66,7 +66,7 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
 
         ServerContext serverContext = ServerContextBuilder.createConfigableServerContext();
         LoadBalancer loadBalancer = LoadBalanceBuilder.createRandomLoadBalancer();
-        CommandExecutor commandExecutor = new AsyncCommandExecutor(restyCommandContext, serverContext);
+        CommandExecutor commandExecutor = new RestyCommandExecutor(restyCommandContext, serverContext);
         result = commandExecutor.execute(loadBalancer, restyCommand);
 
         return result;

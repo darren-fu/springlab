@@ -2,6 +2,7 @@ package df.open.restyproxy.core;
 
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.cb.CircuitBreaker;
+import df.open.restyproxy.cb.CircuitBreakerFactory;
 import df.open.restyproxy.cb.DefaultCircuitBreaker;
 import df.open.restyproxy.command.RestyFuture;
 import df.open.restyproxy.event.EventConsumer;
@@ -9,6 +10,7 @@ import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
 import df.open.restyproxy.http.converter.StringResponseConverter;
+import df.open.restyproxy.http.pojo.FailedResponse;
 import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.lb.ServerContext;
 import df.open.restyproxy.lb.ServerInstance;
@@ -21,12 +23,13 @@ import org.asynchttpclient.uri.Uri;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * 异步Resty请求执行器
  * Created by darrenfu on 17-7-1.
  */
-public class AsyncCommandExecutor implements CommandExecutor {
+public class RestyCommandExecutor implements CommandExecutor {
 
     /**
      * Async Http 请求
@@ -46,7 +49,7 @@ public class AsyncCommandExecutor implements CommandExecutor {
 
     private List<ResponseConverter> converterList;
 
-    public AsyncCommandExecutor(RestyCommandContext context, ServerContext serverContext) {
+    public RestyCommandExecutor(RestyCommandContext context, ServerContext serverContext) {
         this.context = context;
         this.serverContext = serverContext;
 
@@ -64,34 +67,39 @@ public class AsyncCommandExecutor implements CommandExecutor {
         // 1.判断command使用的serverInstanceList是否存在被熔断的server
         // 1.1 存在的话 server加入 loadBalance 的excludeServerList
         //
+        CircuitBreaker circuitBreaker = CircuitBreakerFactory.defaultCircuitBreaker(restyCommand.getServiceName());
 
 
         // 负载均衡器 选择可用服务实例
         ServerInstance serverInstance = lb.choose(serverContext, restyCommand, Collections.EMPTY_LIST);
-//        this.buildRequest(serverInstance, restyCommand);
-        // 获取分配的异步连接池
-//        AsyncHttpClient httpClient = context.getHttpClient(restyCommand.getServiceName());
 
-        // 执行Resty请求
-//        ListenableFuture<Response> future = httpClient.executeRequest(this.request);
+        boolean shouldPass = circuitBreaker.shouldPass(restyCommand, serverInstance);
 
+        if (!shouldPass) {
+            System.out.println("##should not pass!!!!");
+            return null;
+        }
 
-        ListenableFuture<Response> future = restyCommand.ready(null)
+        RestyFuture future = restyCommand.ready(circuitBreaker)
                 .start(serverInstance);
 
-        boolean isAsync = false;
+        boolean isSync = true;
 
-        CircuitBreaker cb = new DefaultCircuitBreaker();
-        EventConsumer consumer = ClassTools.castTo(cb, EventConsumer.class);
-        restyCommand.emit(consumer.getEventKey(), restyCommand);
 
-        if (!isAsync) {
-            Response response = FutureTools.fetchResponse(future);
+        if (isSync) {
+
+            Response response = future.getResponse();
+
+
             Object restyResult = ResponseConverterContext.DEFAULT.convertResponse(restyCommand, response);
+            EventConsumer consumer = ClassTools.castTo(circuitBreaker, EventConsumer.class);
+            restyCommand.emit(consumer.getEventKey(), restyCommand);
+
             return restyResult;
         } else {
-            RestyFuture restyFuture = new RestyFuture(restyCommand, future, ResponseConverterContext.DEFAULT);
-            return restyFuture;
+//            RestyFuture restyFuture = new RestyFuture(restyCommand, future, ResponseConverterContext.DEFAULT);
+//            return restyFuture;
+            return null;
         }
     }
 

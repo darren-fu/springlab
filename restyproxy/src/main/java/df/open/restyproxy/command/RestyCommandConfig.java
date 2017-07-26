@@ -1,6 +1,7 @@
 package df.open.restyproxy.command;
 
 /**
+ * Resty请求的配置
  * Created by darrenfu on 17-6-21.
  */
 public interface RestyCommandConfig {
@@ -18,7 +19,6 @@ public interface RestyCommandConfig {
     Class getFallbackClass();
 
     int getRetry();
-
 
     void setEnableAsync(boolean enableAsync);
 

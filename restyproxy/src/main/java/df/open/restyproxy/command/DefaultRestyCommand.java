@@ -7,6 +7,7 @@ import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.lb.ServerInstance;
 import df.open.restyproxy.util.StringBuilderFactory;
 import lombok.Data;
+import lombok.ToString;
 import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
 
@@ -85,6 +86,8 @@ public class DefaultRestyCommand implements RestyCommand {
 
     private CircuitBreaker circuitBreaker;
 
+    private ServerInstance instance;
+
     public DefaultRestyCommand(Class serviceClz,
                                Method serviceMethod,
                                Type returnTyp,
@@ -156,14 +159,15 @@ public class DefaultRestyCommand implements RestyCommand {
     public RestyCommand ready(CircuitBreaker cb) {
 
         this.circuitBreaker = cb;
-        this.status = status = RestyCommandStatus.READY;
+        this.status = RestyCommandStatus.READY;
         return this;
     }
 
     @Override
-    public ListenableFuture<Response> start(ServerInstance instance) {
+    public RestyFuture start(ServerInstance instance) {
         this.status = RestyCommandStatus.STARTED;
-        boolean shouldBreak = circuitBreaker.shouldBreak(this, instance);
+        this.instance = instance;
+//        boolean shouldBreak = circuitBreaker.shouldPass(this, instance);
         // TODO fallback
         AsyncHttpClient httpClient = context.getHttpClient(this.getServiceName());
         BoundRequestBuilder requestBuilder = new BoundRequestBuilder(httpClient,
@@ -173,7 +177,16 @@ public class DefaultRestyCommand implements RestyCommand {
         requestBuilder.setSingleHeaders(getRequestTemplate().getHeaders());
         this.request = requestBuilder.build();
         ListenableFuture<Response> future = httpClient.executeRequest(request);
-        return future;
+
+        return new RestyFuture(this, future);
+    }
+
+    @Override
+    public String getInstanceId() {
+        if (this.instance == null) {
+            throw new RuntimeException("instance is null");
+        }
+        return this.instance.getInstanceId();
     }
 
     @Override
@@ -181,7 +194,6 @@ public class DefaultRestyCommand implements RestyCommand {
         // TODO 事件 eventEmit
 
         this.status = RestyCommandStatus.SUCCESS;
-        circuitBreaker.update(this);
         return this;
     }
 
@@ -189,7 +201,6 @@ public class DefaultRestyCommand implements RestyCommand {
     public RestyCommand failed(RestyException restyException) {
         this.exception = restyException;
         this.status = RestyCommandStatus.FAILED;
-        circuitBreaker.update(this);
         return this;
     }
 
@@ -199,5 +210,5 @@ public class DefaultRestyCommand implements RestyCommand {
         return null;
     }
 
-  
+
 }

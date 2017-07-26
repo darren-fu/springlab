@@ -32,7 +32,7 @@ public interface ProxyService extends ApplicationService {
     String getStatus();
 
     @RestyMethod()
-    @RequestMapping
+    @RequestMapping(value = "/list")
     List<User> getList();
 
     @RestyMethod(value = "/get/value")

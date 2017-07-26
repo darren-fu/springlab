@@ -22,4 +22,8 @@ public class RestyException extends RuntimeException {
         this.code = code;
     }
 
+    public RestyException(Throwable throwable) {
+        super(throwable);
+        this.code = RESTY_EXCEPTION_CODE;
+    }
 }

@@ -5,6 +5,11 @@ package df.open.restyproxy.exception;
  * Created by darrenfu on 17-7-22.
  */
 public class ConnectionException extends RestyException {
+
+    public ConnectionException(Throwable throwable) {
+        super(throwable);
+    }
+
     public ConnectionException(String msg) {
         super(msg);
     }

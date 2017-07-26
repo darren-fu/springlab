@@ -1,11 +1,8 @@
 package df.open.restyproxy.command;
 
-import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.cb.CircuitBreaker;
 import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.lb.ServerInstance;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
 
 /**
  * RestyCommand生命周期
@@ -35,7 +32,15 @@ public interface RestyCommandLifeCycle {
      * @param instance the instance
      * @return the listenable future
      */
-    ListenableFuture<Response> start(ServerInstance instance);
+    RestyFuture start(ServerInstance instance);
+
+
+    /**
+     * Gets instance id.
+     *
+     * @return the instance id
+     */
+    String getInstanceId();
 
     /**
      * RestyCommand执行成功

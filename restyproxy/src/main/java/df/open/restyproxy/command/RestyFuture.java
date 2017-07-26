@@ -1,8 +1,12 @@
 package df.open.restyproxy.command;
 
+import df.open.restyproxy.exception.ConnectionException;
+import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
+import df.open.restyproxy.http.pojo.FailedResponse;
 import df.open.restyproxy.util.FutureTools;
+import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
 
@@ -15,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by darrenfu on 17-7-20.
  */
+@Slf4j
 public class RestyFuture implements Future {
 
     private RestyCommand restyCommand;
@@ -25,6 +30,11 @@ public class RestyFuture implements Future {
 
     private List<ResponseConverter> converterList;
 
+    public RestyFuture(RestyCommand restyCommand, ListenableFuture<Response> future) {
+        this.restyCommand = restyCommand;
+        this.future = future;
+        this.converterContext = ResponseConverterContext.DEFAULT;
+    }
 
     public RestyFuture(RestyCommand restyCommand, ListenableFuture<Response> future, ResponseConverterContext converterContext) {
         this.restyCommand = restyCommand;
@@ -53,13 +63,23 @@ public class RestyFuture implements Future {
         return null;
     }
 
-    public <T> T getResult() {
-        T result = (T) converterContext.convertResponse(restyCommand, FutureTools.fetchResponse(future));
+//    public <T> T getResult() {
+//        T result = (T) converterContext.convertResponse(restyCommand, FutureTools.fetchResponse(future));
+//
+//        System.out.println(result);
+//        System.out.println(result.getClass());
+//        return result;
+//    }
 
-        System.out.println(result);
-        System.out.println(result.getClass());
-        return result;
+    public Response getResponse() {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("获取响应失败:", e);
+            return FailedResponse.create(new ConnectionException(e));
+        }
     }
+
 
     @Override
     public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
