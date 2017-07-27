@@ -75,7 +75,7 @@ public class RestyFuture implements Future {
         try {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
-            log.error("获取响应失败:", e);
+            log.error("获取响应失败:", e.getMessage());
             return FailedResponse.create(new ConnectionException(e));
         }
     }
@@ -84,7 +84,7 @@ public class RestyFuture implements Future {
     @Override
     public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         Response response = future.get(timeout, unit);
-        return null;
+        return response;
     }
 
 

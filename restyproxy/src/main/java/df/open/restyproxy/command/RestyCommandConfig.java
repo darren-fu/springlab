@@ -10,23 +10,27 @@ public interface RestyCommandConfig {
 
     void setServiceName(String serviceName);
 
-    boolean isEnableAsync();
+    boolean isAsyncEnabled();
 
-    boolean isEnableCircuitBreak();
+    boolean isCircuitBreakEnabled();
 
-    boolean isEnableFallback();
+    boolean isFallbackEnabled();
 
     Class getFallbackClass();
 
+    String getFallbackBean();
+
     int getRetry();
 
-    void setEnableAsync(boolean enableAsync);
+    void setAsyncEnabled(boolean asyncEnabled);
 
-    void setEnableCircuitBreak(boolean enableCircuitBreak);
+    void setCircuitBreakEnabled(boolean enableCircuitBreak);
 
-    void setEnableFallback(boolean enableFallback);
+    void setFallbackEnabled(boolean enableFallback);
 
     void setFallbackClass(Class fallbackClass);
+
+    void setFallbackBean(String fallbackBean);
 
     void setRetry(int retry);
 
@@ -35,15 +39,17 @@ public interface RestyCommandConfig {
 
         private String serviceName;
 
-        private boolean enableAsync = false;
+        private boolean asyncEnabled = false;
 
-        private boolean enableCircuitBreak = false;
+        private boolean circuitBreakEnabled = true;
 
-        private boolean enableFallback = false;
+        private boolean fallbackEnabled = true;
 
         private Class fallbackClass;
 
-        private int retry = 2;
+        private String fallbackBean;
+
+        private int retry = 1;
 
         public String getServiceName() {
             return serviceName;
@@ -53,40 +59,50 @@ public interface RestyCommandConfig {
             this.serviceName = serviceName;
         }
 
-        public boolean isEnableAsync() {
-            return enableAsync;
+        public boolean isAsyncEnabled() {
+            return asyncEnabled;
         }
 
-        public boolean isEnableCircuitBreak() {
-            return enableCircuitBreak;
+        public boolean isCircuitBreakEnabled() {
+            return circuitBreakEnabled;
         }
 
-        public boolean isEnableFallback() {
-            return enableFallback;
+        public boolean isFallbackEnabled() {
+            return fallbackEnabled;
         }
 
         public Class getFallbackClass() {
             return fallbackClass;
         }
 
+        @Override
+        public String getFallbackBean() {
+            return fallbackBean;
+        }
+
         public int getRetry() {
             return retry;
         }
 
-        public void setEnableAsync(boolean enableAsync) {
-            this.enableAsync = enableAsync;
+        public void setAsyncEnabled(boolean asyncEnabled) {
+            this.asyncEnabled = asyncEnabled;
         }
 
-        public void setEnableCircuitBreak(boolean enableCircuitBreak) {
-            this.enableCircuitBreak = enableCircuitBreak;
+        public void setCircuitBreakEnabled(boolean enableCircuitBreak) {
+            this.circuitBreakEnabled = enableCircuitBreak;
         }
 
-        public void setEnableFallback(boolean enableFallback) {
-            this.enableFallback = enableFallback;
+        public void setFallbackEnabled(boolean enableFallback) {
+            this.fallbackEnabled = enableFallback;
         }
 
         public void setFallbackClass(Class fallbackClass) {
             this.fallbackClass = fallbackClass;
+        }
+
+        @Override
+        public void setFallbackBean(String fallbackBean) {
+            this.fallbackBean = fallbackBean;
         }
 
         public void setRetry(int retry) {

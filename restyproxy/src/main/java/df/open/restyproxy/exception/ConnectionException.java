@@ -1,7 +1,7 @@
 package df.open.restyproxy.exception;
 
 /**
- * HTTP连接异常
+ * 请求连接异常（httpConnectException, TimeoutException,InterruptException）
  * Created by darrenfu on 17-7-22.
  */
 public class ConnectionException extends RestyException {

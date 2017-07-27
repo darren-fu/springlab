@@ -11,9 +11,16 @@ public interface CommandExecutor {
 
 
     /**
+     * Executable boolean.
+     *
+     * @param restyCommand the resty command
+     * @return the boolean
+     */
+    boolean executable(RestyCommand restyCommand);
+
+    /**
      * 执行RestyCommand，返回结果
      *
-     * @param <T>          the type parameter
      * @param lb           the lb
      * @param restyCommand the resty command
      * @return the t

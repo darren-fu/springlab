@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @ToString(exclude = {"commandQueue", "halfOpenLock"})
 @Slf4j
-public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
+public class DefaultCircuitBreaker implements CircuitBreaker {
 
     /**
      * key:[RestyCommand#path, ServerInstance#instanceId, segmentKey]
@@ -149,8 +149,8 @@ public class DefaultCircuitBreaker implements CircuitBreaker, EventConsumer {
     }
 
     @Override
-    public List<String> getBrokenServer() {
-        return null;
+    public Set<String> getBrokenServer() {
+        return Collections.EMPTY_SET;
     }
 
     /**

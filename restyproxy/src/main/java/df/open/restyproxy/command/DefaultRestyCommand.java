@@ -191,8 +191,8 @@ public class DefaultRestyCommand implements RestyCommand {
 
     @Override
     public RestyCommand success() {
-        // TODO 事件 eventEmit
         this.status = RestyCommandStatus.SUCCESS;
+        this.emit(circuitBreaker.getEventKey(), this);
         return this;
     }
 
@@ -200,13 +200,14 @@ public class DefaultRestyCommand implements RestyCommand {
     public RestyCommand failed(RestyException restyException) {
         this.exception = restyException;
         this.status = RestyCommandStatus.FAILED;
+        this.emit(circuitBreaker.getEventKey(), this);
         return this;
     }
 
 
     @Override
-    public Exception getFailException() {
-        return null;
+    public RestyException getFailException() {
+        return this.exception;
     }
 
 

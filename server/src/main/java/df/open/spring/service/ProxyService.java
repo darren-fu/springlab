@@ -2,6 +2,7 @@ package df.open.spring.service;
 
 import df.open.restyproxy.annotation.RestyMethod;
 import df.open.restyproxy.annotation.RestyService;
+import df.open.spring.service.impl.ProxyServiceImpl;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -23,7 +24,7 @@ import java.util.List;
  * @contact 13914793391
  * @date 2016/11/22
  */
-@RestyService(serviceName = "resty")
+@RestyService(serviceName = "resty", fallbackClass = ProxyServiceImpl.class)
 @RequestMapping(value = "/resty")
 public interface ProxyService extends ApplicationService {
 

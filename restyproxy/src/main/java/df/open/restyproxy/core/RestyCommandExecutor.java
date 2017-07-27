@@ -3,27 +3,23 @@ package df.open.restyproxy.core;
 import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.cb.CircuitBreaker;
 import df.open.restyproxy.cb.CircuitBreakerFactory;
-import df.open.restyproxy.cb.DefaultCircuitBreaker;
+import df.open.restyproxy.command.RestyCommand;
+import df.open.restyproxy.command.RestyCommandStatus;
 import df.open.restyproxy.command.RestyFuture;
-import df.open.restyproxy.event.EventConsumer;
+import df.open.restyproxy.exception.CircuitBreakException;
 import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
 import df.open.restyproxy.http.converter.StringResponseConverter;
-import df.open.restyproxy.http.pojo.FailedResponse;
 import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.lb.ServerContext;
 import df.open.restyproxy.lb.ServerInstance;
-import df.open.restyproxy.command.RestyCommand;
-import df.open.restyproxy.util.ClassTools;
-import df.open.restyproxy.util.FutureTools;
-import org.asynchttpclient.*;
+import org.asynchttpclient.BoundRequestBuilder;
+import org.asynchttpclient.Request;
+import org.asynchttpclient.Response;
 import org.asynchttpclient.uri.Uri;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
 
 /**
  * 异步Resty请求执行器
@@ -60,47 +56,70 @@ public class RestyCommandExecutor implements CommandExecutor {
 
 
     @Override
+    public boolean executable(RestyCommand restyCommand) {
+        return restyCommand != null && restyCommand.getStatus() == RestyCommandStatus.INIT;
+    }
+
+    @Override
     public Object execute(LoadBalancer lb, RestyCommand restyCommand) {
 
-        //TODO 熔断判断
-        // 0.command = path + serviceName
-        // 1.判断command使用的serverInstanceList是否存在被熔断的server
-        // 1.1 存在的话 server加入 loadBalance 的excludeServerList
-        //
+
+        int retry = restyCommand.getRestyCommandConfig().getRetry();
+
+        Object result = null;
         CircuitBreaker circuitBreaker = CircuitBreakerFactory.defaultCircuitBreaker(restyCommand.getServiceName());
+        ServerInstance serverInstance = null;
+
+        Set<String> excludeInstanceIdList = circuitBreaker.getBrokenServer();
+
+        for (int times = 0; times <= retry; times++) {
+            try {
 
 
-        // 负载均衡器 选择可用服务实例
-        ServerInstance serverInstance = lb.choose(serverContext, restyCommand, Collections.EMPTY_LIST);
+                // 0.command = path + serviceName
+                // 1.判断command使用的serverInstanceList是否存在被熔断的server
+                // 1.1 存在的话 server加入 loadBalance 的excludeServerList
 
-        boolean shouldPass = circuitBreaker.shouldPass(restyCommand, serverInstance);
+                // 负载均衡器 选择可用服务实例
+                serverInstance = lb.choose(serverContext, restyCommand, excludeInstanceIdList);
 
-        if (!shouldPass) {
-            System.out.println("##should not pass!!!!");
-            return null;
+                boolean shouldPass = circuitBreaker.shouldPass(restyCommand, serverInstance);
+
+                if (!shouldPass) {
+                    System.out.println("##should not pass!!!!");
+                    // fallback or exception
+                    throw new CircuitBreakException("circuit break is working");
+                }
+
+                RestyFuture future = restyCommand.ready(circuitBreaker)
+                        .start(serverInstance);
+
+                // 同步调用
+                Response response = future.getResponse();
+                result = ResponseConverterContext.DEFAULT.convertResponse(restyCommand, response);
+                if (restyCommand.getStatus() == RestyCommandStatus.FAILED) {
+                    throw restyCommand.getFailException();
+                }
+
+            } catch (Exception ex) {
+                if (times == retry) {
+                    System.out.println("##重试了:" + times + " 次，到达最大值:" + retry);
+                    throw ex;
+                } else {
+                    // 将本次使用的server 加入排除列表
+                    if (excludeInstanceIdList == null || excludeInstanceIdList == Collections.EMPTY_SET) {
+                        excludeInstanceIdList = new HashSet<>();
+                    }
+                    if (serverInstance != null) {
+                        excludeInstanceIdList.add(serverInstance.getInstanceId());
+                    }
+                    System.out.println("@@重试了:" + times + " 次，最大值:" + retry);
+                }
+            } finally {
+                System.out.println("finally...");
+            }
         }
-
-        RestyFuture future = restyCommand.ready(circuitBreaker)
-                .start(serverInstance);
-
-        boolean isSync = true;
-
-
-        if (isSync) {
-
-            Response response = future.getResponse();
-
-
-            Object restyResult = ResponseConverterContext.DEFAULT.convertResponse(restyCommand, response);
-            EventConsumer consumer = ClassTools.castTo(circuitBreaker, EventConsumer.class);
-            restyCommand.emit(consumer.getEventKey(), restyCommand);
-
-            return restyResult;
-        } else {
-//            RestyFuture restyFuture = new RestyFuture(restyCommand, future, ResponseConverterContext.DEFAULT);
-//            return restyFuture;
-            return null;
-        }
+        return result;
     }
 
     /**

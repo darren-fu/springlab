@@ -1,15 +1,16 @@
 package df.open.restyproxy.cb;
 
-import df.open.restyproxy.lb.ServerInstance;
 import df.open.restyproxy.command.RestyCommand;
+import df.open.restyproxy.event.EventConsumer;
+import df.open.restyproxy.lb.ServerInstance;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * 断路器
  * Created by darrenfu on 17-7-22.
  */
-public interface CircuitBreaker {
+public interface CircuitBreaker extends EventConsumer {
 
     /**
      * 启动断路器.
@@ -35,7 +36,7 @@ public interface CircuitBreaker {
      *
      * @return the broken server
      */
-    List<String> getBrokenServer();
+    Set<String> getBrokenServer();
 
     /**
      * The enum Status.

@@ -63,7 +63,7 @@ public interface RestyCommandLifeCycle {
      *
      * @return the fail exception
      */
-    Exception getFailException();
+    RestyException getFailException();
 
 
 }

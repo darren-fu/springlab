@@ -2,6 +2,7 @@ package df.open.restyproxy.annotation.processor;
 
 import df.open.restyproxy.annotation.RestyService;
 import df.open.restyproxy.command.RestyCommandConfig;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;
 
@@ -18,9 +19,22 @@ public class RestyServiceProcessor implements RestyAnnotationProcessor {
 
             RestyService restyService = (RestyService) annotation;
 
-            String value = restyService.serviceName();
-            properties.setServiceName(value);
-            System.out.println("annotation value: " + value);
+            String serviceName = restyService.serviceName();
+            if (StringUtils.isEmpty(serviceName)) {
+                throw new IllegalArgumentException("service name can not be null");
+            }
+            properties.setServiceName(serviceName);
+
+            //fallback
+            properties.setFallbackEnabled(restyService.fallbackEnabled());
+            if (restyService.fallbackClass() != null) {
+                properties.setFallbackClass(restyService.fallbackClass());
+            }
+
+            // circuit break
+            properties.setCircuitBreakEnabled(restyService.circuitBreakEnabled());
+
+            System.out.println("annotation value: " + serviceName);
         }
         return properties;
     }

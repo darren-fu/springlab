@@ -7,6 +7,8 @@ import df.open.restyproxy.command.DefaultRestyCommand;
 import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.core.RestyCommandExecutor;
 import df.open.restyproxy.core.CommandExecutor;
+import df.open.restyproxy.exception.RestyException;
+import df.open.restyproxy.fallback.FallbackExecutor;
 import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.StringResponseConverter;
@@ -14,6 +16,7 @@ import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.lb.LoadBalanceBuilder;
 import df.open.restyproxy.lb.ServerContext;
 import df.open.restyproxy.lb.ServerContextBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -35,6 +38,7 @@ import java.util.List;
  * @contact 13914793391
  * @date 2016/11/22
  */
+@Slf4j
 public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
 
 
@@ -56,7 +60,7 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
             return handleSpecialMethod(proxy, method, args);
         }
 
-        Object result;
+        Object result = null;
 
         RestyCommand restyCommand = new DefaultRestyCommand(method.getDeclaringClass(),
                 method,
@@ -67,7 +71,22 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
         ServerContext serverContext = ServerContextBuilder.createConfigableServerContext();
         LoadBalancer loadBalancer = LoadBalanceBuilder.createRandomLoadBalancer();
         CommandExecutor commandExecutor = new RestyCommandExecutor(restyCommandContext, serverContext);
-        result = commandExecutor.execute(loadBalancer, restyCommand);
+        FallbackExecutor fallbackExecutor = new FallbackExecutor();
+        try {
+            if (commandExecutor.executable(restyCommand)) {
+                result = commandExecutor.execute(loadBalancer, restyCommand);
+            } else {
+                throw new IllegalStateException("Resty command is suitable:" + restyCommand);
+            }
+        } catch (RestyException ex) {
+            log.error("请求发生异常:", ex);
+            if (fallbackExecutor.executable(restyCommand)) {
+                return fallbackExecutor.execute(loadBalancer, restyCommand);
+            } else {
+                throw ex;
+            }
+        }
+
 
         return result;
 

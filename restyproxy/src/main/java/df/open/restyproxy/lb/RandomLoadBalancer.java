@@ -3,6 +3,7 @@ package df.open.restyproxy.lb;
 import df.open.restyproxy.command.RestyCommand;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 负载均衡
@@ -12,7 +13,7 @@ import java.util.List;
 public class RandomLoadBalancer implements LoadBalancer {
 
     @Override
-    public ServerInstance choose(ServerContext context, RestyCommand command, List<ServerInstance> excludeServerList) {
+    public ServerInstance choose(ServerContext context, RestyCommand command, Set<String> excludeInstanceIdList) {
         List<ServerInstance> serverList = context.getServerList(command.getServiceName());
 
         return serverList.get(0);

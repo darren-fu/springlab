@@ -1,5 +1,6 @@
 package df.open.spring.service.impl;
 
+import df.open.restyproxy.exception.RestyException;
 import df.open.spring.service.Data;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
@@ -23,6 +24,12 @@ import java.util.List;
 public class ProxyServiceImpl implements ProxyService {
     @Override
     public String getStatus() {
+        System.out.println("执行基本降级");
+        return null;
+    }
+
+    public String getStatus(RestyException ex) {
+        System.out.println("执行加强降级，Ex:" + ex.getMessage());
         return null;
     }
 
