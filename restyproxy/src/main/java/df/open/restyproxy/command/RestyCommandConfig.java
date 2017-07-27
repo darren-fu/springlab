@@ -1,10 +1,13 @@
 package df.open.restyproxy.command;
 
+import df.open.restyproxy.command.refresh.ConfigRefresh;
+import df.open.restyproxy.command.refresh.RefreshCommandConfig;
+
 /**
  * Resty请求的配置
  * Created by darrenfu on 17-6-21.
  */
-public interface RestyCommandConfig {
+public interface RestyCommandConfig extends ConfigRefresh<RefreshCommandConfig> {
 
     String getServiceName();
 
@@ -13,6 +16,8 @@ public interface RestyCommandConfig {
     boolean isAsyncEnabled();
 
     boolean isCircuitBreakEnabled();
+
+    boolean isForceBreakEnabled();
 
     boolean isFallbackEnabled();
 
@@ -25,6 +30,8 @@ public interface RestyCommandConfig {
     void setAsyncEnabled(boolean asyncEnabled);
 
     void setCircuitBreakEnabled(boolean enableCircuitBreak);
+
+    void setForceBreakEnabled(boolean forceBreakEnabled);
 
     void setFallbackEnabled(boolean enableFallback);
 
@@ -42,6 +49,8 @@ public interface RestyCommandConfig {
         private boolean asyncEnabled = false;
 
         private boolean circuitBreakEnabled = true;
+
+        private boolean forceBreakEnabled = false;
 
         private boolean fallbackEnabled = true;
 
@@ -107,6 +116,28 @@ public interface RestyCommandConfig {
 
         public void setRetry(int retry) {
             this.retry = retry;
+        }
+
+
+        public boolean isForceBreakEnabled() {
+            return forceBreakEnabled;
+        }
+
+        public void setForceBreakEnabled(boolean forceBreakEnabled) {
+            this.forceBreakEnabled = forceBreakEnabled;
+        }
+
+
+        @Override
+        public boolean refresh(RefreshCommandConfig refreshCommandConfig) {
+
+            if (refreshCommandConfig.getCircuitBreakEnabled() != null) {
+                this.setCircuitBreakEnabled(refreshCommandConfig.getCircuitBreakEnabled());
+            }
+            if (refreshCommandConfig.getFallbackEnabled() != null) {
+                this.setFallbackEnabled(refreshCommandConfig.getFallbackEnabled());
+            }
+            return true;
         }
     }
 }

@@ -46,7 +46,7 @@ public class RestyProxyBeanFactory implements FactoryBean<Object>, InitializingB
     protected Object createProxy(Class type, RestyCommandContext restyCommandContext) {
         Object proxy = null;
         try {
-            DefaultRestyProxyInvokeHandler interfaceIvkHandler = new DefaultRestyProxyInvokeHandler(restyCommandContext);
+            RestyProxyInvokeHandler interfaceIvkHandler = new RestyProxyInvokeHandler(restyCommandContext);
             proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, interfaceIvkHandler);
         } catch (Exception e) {
             e.printStackTrace();

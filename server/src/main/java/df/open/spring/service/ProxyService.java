@@ -24,7 +24,12 @@ import java.util.List;
  * @contact 13914793391
  * @date 2016/11/22
  */
-@RestyService(serviceName = "resty", fallbackClass = ProxyServiceImpl.class)
+@RestyService(serviceName = "resty",
+        fallbackClass = ProxyServiceImpl.class,
+        retry = 1,
+        forceBreakEnabled = true
+)
+//@RestyService(serviceName = "resty", retry = 2)
 @RequestMapping(value = "/resty")
 public interface ProxyService extends ApplicationService {
 
@@ -36,7 +41,7 @@ public interface ProxyService extends ApplicationService {
     @RequestMapping(value = "/list")
     List<User> getList();
 
-    @RestyMethod(value = "/get/value")
+    @RestyMethod()
     @RequestMapping(value = "/get_age", method = RequestMethod.GET)
     Response<String> getAge(@RequestParam("id") Long id, String code, @PathVariable(value = "name") String name);
 

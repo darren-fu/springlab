@@ -1,4 +1,6 @@
-package df.open.restyproxy.lb;
+package df.open.restyproxy.lb.server;
+
+import df.open.restyproxy.lb.LoadBalancer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +28,6 @@ public class ConfigurableServerContext implements ServerContext {
         List<ServerInstance> list = new ArrayList<>();
         list.add(ServerInstance.buildInstance(serviceName, "localhost", 9201));
         list.add(ServerInstance.buildInstance(serviceName, "localhost", 9202));
-
         return list;
     }
 

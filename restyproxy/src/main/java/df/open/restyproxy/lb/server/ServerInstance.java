@@ -1,4 +1,4 @@
-package df.open.restyproxy.lb;
+package df.open.restyproxy.lb.server;
 
 import df.open.restyproxy.base.RestyConsts;
 import df.open.restyproxy.util.StringBuilderFactory;
@@ -9,20 +9,22 @@ import java.util.Date;
 import java.util.Map;
 
 /**
+ * 服务实例
  * Created by darrenfu on 17-6-25.
  */
 @Data
 public class ServerInstance {
 
     /**
+     * 服务实例ID unique
+     */
+    private String instanceId;
+    
+    /**
      * 服务名称
      */
     private String serviceName;
 
-    /**
-     * 服务实例ID
-     */
-    private String instanceId;
 
     /**
      * 主机
@@ -76,13 +78,13 @@ public class ServerInstance {
         instance.setHttps(false);
 
         StringBuilder sb = StringBuilderFactory.DEFAULT.stringBuilder();
-        sb.append("#");
+//        sb.append("#");
         sb.append(serviceName);
-        sb.append("#");
-        sb.append(instance.getRoom());
-        sb.append("#");
-        sb.append(instance.isHttps ? "HTTP" : "HTTPS");
-        sb.append(":");
+//        sb.append("#");
+//        sb.append(instance.getRoom());
+//        sb.append("#");
+//        sb.append(instance.isHttps ? "HTTP" : "HTTPS");
+        sb.append("@");
         sb.append(host);
         sb.append(":");
         sb.append(port);

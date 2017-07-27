@@ -1,6 +1,8 @@
 package df.open.restyproxy.lb;
 
 import df.open.restyproxy.command.RestyCommand;
+import df.open.restyproxy.lb.server.ServerContext;
+import df.open.restyproxy.lb.server.ServerInstance;
 
 import java.util.Set;
 

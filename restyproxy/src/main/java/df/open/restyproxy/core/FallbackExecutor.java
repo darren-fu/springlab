@@ -1,4 +1,4 @@
-package df.open.restyproxy.fallback;
+package df.open.restyproxy.core;
 
 import df.open.restyproxy.annotation.RestyService;
 import df.open.restyproxy.command.RestyCommand;
@@ -26,11 +26,18 @@ public class FallbackExecutor implements CommandExecutor {
 
 
     @Override
+    public int order() {
+        return Integer.MAX_VALUE;
+    }
+
+    @Override
     public boolean executable(RestyCommand restyCommand) {
+        RestyCommandConfig commandConfig = restyCommand.getRestyCommandConfig();
         return restyCommand != null
                 && restyCommand.getStatus() == RestyCommandStatus.FAILED
-                && ((restyCommand.getRestyCommandConfig().getFallbackClass() != null && restyCommand.getRestyCommandConfig().getFallbackClass() != RestyService.Noop.class)
-                || StringUtils.isNotEmpty(restyCommand.getRestyCommandConfig().getFallbackBean()));
+                && commandConfig.isFallbackEnabled()
+                && ((commandConfig.getFallbackClass() != null && commandConfig.getFallbackClass() != RestyService.Noop.class)
+                || StringUtils.isNotEmpty(commandConfig.getFallbackBean()));
     }
 
     @Override
@@ -41,7 +48,7 @@ public class FallbackExecutor implements CommandExecutor {
 
         if (fallbackClass != null && fallbackClass != RestyService.Noop.class) {
             Object fallbackObj = fallbackClassMap.get(fallbackClass);
-
+            // TODO 支持 fallbackBean
             if (fallbackObj == null) {
                 fallbackObj = ClassTools.instance(fallbackClass);
                 Object existObj = fallbackClassMap.putIfAbsent(fallbackClass, fallbackObj);
@@ -50,7 +57,6 @@ public class FallbackExecutor implements CommandExecutor {
                 }
             }
             Method fallbackMethod = findMethodInFallbackClass(fallbackClass, restyCommand);
-
             try {
                 return fallbackMethod.invoke(fallbackObj, copyArgsWithException(restyCommand));
             } catch (IllegalAccessException | InvocationTargetException e) {

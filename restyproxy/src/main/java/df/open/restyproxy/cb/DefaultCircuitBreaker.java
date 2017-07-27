@@ -4,9 +4,8 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.command.RestyCommandStatus;
-import df.open.restyproxy.event.EventConsumer;
 import df.open.restyproxy.exception.RequestException;
-import df.open.restyproxy.lb.ServerInstance;
+import df.open.restyproxy.lb.server.ServerInstance;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -49,9 +48,9 @@ public class DefaultCircuitBreaker implements CircuitBreaker {
     private ConcurrentHashMap<String, Deque<Metrics>> segmentMap;
 
     /**
-     * 记录短路状态 segmentKey->Status
+     * 记录短路状态 segmentKey->BreakerStatus
      */
-    private ConcurrentHashMap<String, Status> statusMap;
+    private ConcurrentHashMap<String, BreakerStatus> statusMap;
 
     /**
      * Command 阻塞队列
@@ -102,6 +101,16 @@ public class DefaultCircuitBreaker implements CircuitBreaker {
             return true;
         }
 
+        // 强制短路
+        if (restyCommand.getRestyCommandConfig().isForceBreakEnabled()) {
+            return false;
+        }
+
+        // 断路器未启用
+        if (!restyCommand.getRestyCommandConfig().isCircuitBreakEnabled()) {
+            return true;
+        }
+
         String segmentKey = getSegmentKey(restyCommand.getPath(), serverInstance.getInstanceId());
         // 获取统计段
         Deque<Metrics> metricsDeque = getSegmentDeque(segmentKey);
@@ -115,12 +124,12 @@ public class DefaultCircuitBreaker implements CircuitBreaker {
         Metrics.SegmentMetrics metrics = first.getMetrics();
         // 计数器中失败数量和比例超过阀值，则触发短路判断
         if (metrics.failCount() >= breakFailCount && metrics.failPercentage() >= breakFailPercentage) {
-            Status status = statusMap.get(segmentKey);
+            BreakerStatus breakerStatus = statusMap.get(segmentKey);
             shouldPass = false;
-            if (status == null || status == Status.OPEN) {
+            if (breakerStatus == null || breakerStatus == BreakerStatus.OPEN) {
                 // 短路
-                statusMap.put(segmentKey, Status.BREAK);
-            } else if (status == Status.HALFOPEN) {
+                statusMap.put(segmentKey, BreakerStatus.BREAK);
+            } else if (breakerStatus == BreakerStatus.HALF_OPEN) {
                 // noop
             } else {
                 // 如果上次的请求距离现在超过阀值，则允许一次试探请求
@@ -130,8 +139,8 @@ public class DefaultCircuitBreaker implements CircuitBreaker {
                     lock.lock();
                     try {
                         // 判断当前短路状态 确保只有一个请求通过
-                        if (statusMap.get(segmentKey) == Status.BREAK) {
-                            statusMap.put(segmentKey, Status.HALFOPEN);
+                        if (statusMap.get(segmentKey) == BreakerStatus.BREAK) {
+                            statusMap.put(segmentKey, BreakerStatus.HALF_OPEN);
                             shouldPass = true;
                         }
                     } finally {
@@ -207,16 +216,16 @@ public class DefaultCircuitBreaker implements CircuitBreaker {
                         boolean isSuccess = isSuccessCommand(restyCommand);
                         boolean forceUseNewMetrics = false;
                         // 如果当前处在短路或半短路状态
-                        Status status = statusMap.get(key);
-                        if ((status == Status.BREAK || status == Status.HALFOPEN)) {
+                        BreakerStatus breakerStatus = statusMap.get(key);
+                        if ((breakerStatus == BreakerStatus.BREAK || breakerStatus == BreakerStatus.HALF_OPEN)) {
                             // 结果成功 则不再短路，打开断路器
                             if (isSuccess) {
                                 // 并使用一个新的计数器
                                 forceUseNewMetrics = true;
-                                statusMap.put(key, Status.OPEN);
+                                statusMap.put(key, BreakerStatus.OPEN);
                             } else {
                                 // 否则恢复到短路状态
-                                statusMap.put(key, Status.BREAK);
+                                statusMap.put(key, BreakerStatus.BREAK);
                             }
                         }
                         first.store(isSuccess, forceUseNewMetrics);

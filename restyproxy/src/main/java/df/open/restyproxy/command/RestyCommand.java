@@ -2,7 +2,7 @@ package df.open.restyproxy.command;
 
 import df.open.restyproxy.base.RestyRequestTemplate;
 import df.open.restyproxy.event.EventEmit;
-import df.open.restyproxy.lb.ServerInstance;
+import df.open.restyproxy.lb.server.ServerInstance;
 import org.asynchttpclient.uri.Uri;
 
 import java.lang.reflect.Method;

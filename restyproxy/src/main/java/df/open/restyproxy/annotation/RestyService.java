@@ -23,6 +23,7 @@ public @interface RestyService {
 
     boolean circuitBreakEnabled() default true;
 
+    boolean forceBreakEnabled() default false;
 
     class Noop {
 

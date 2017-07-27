@@ -1,6 +1,8 @@
 package df.open.spring;
 
 import df.open.restyproxy.annotation.EnableRestyProxy;
+import df.open.restyproxy.base.RestyCommandContext;
+import df.open.restyproxy.command.refresh.RefreshCommandConfig;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
 import df.open.spring.service.User;
@@ -65,5 +67,16 @@ public class ServerApplication implements EmbeddedServletContainerCustomizer {
         return proxyService.getAge(10L, "code", "test");
     }
 
+
+    @RequestMapping("/refresh")
+    public String refresh() {
+        RefreshCommandConfig commandConfig = new RefreshCommandConfig();
+        commandConfig.setServiceName("resty");
+        //        commandConfig.setPath();
+        commandConfig.setCircuitBreakEnabled(false);
+        commandConfig.setFallbackEnabled(false);
+        RestyCommandContext.getInstance().refresh(commandConfig);
+        return "Done";
+    }
 
 }

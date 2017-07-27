@@ -8,14 +8,14 @@ import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.core.RestyCommandExecutor;
 import df.open.restyproxy.core.CommandExecutor;
 import df.open.restyproxy.exception.RestyException;
-import df.open.restyproxy.fallback.FallbackExecutor;
+import df.open.restyproxy.core.FallbackExecutor;
 import df.open.restyproxy.http.converter.JsonResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.StringResponseConverter;
 import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.lb.LoadBalanceBuilder;
-import df.open.restyproxy.lb.ServerContext;
-import df.open.restyproxy.lb.ServerContextBuilder;
+import df.open.restyproxy.lb.server.ServerContext;
+import df.open.restyproxy.lb.server.ServerContextBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -39,14 +39,14 @@ import java.util.List;
  * @date 2016/11/22
  */
 @Slf4j
-public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
+public class RestyProxyInvokeHandler implements InvocationHandler {
 
 
     private RestyCommandContext restyCommandContext;
 
     private List<ResponseConverter> converterList;
 
-    public DefaultRestyProxyInvokeHandler(RestyCommandContext restyCommandContext) {
+    public RestyProxyInvokeHandler(RestyCommandContext restyCommandContext) {
         this.restyCommandContext = restyCommandContext;
         this.converterList = new ArrayList<>();
         converterList.add(new JsonResponseConverter());
@@ -68,7 +68,7 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
                 args,
                 restyCommandContext);
 
-        ServerContext serverContext = ServerContextBuilder.createConfigableServerContext();
+        ServerContext serverContext = ServerContextBuilder.createConfigurableServerContext();
         LoadBalancer loadBalancer = LoadBalanceBuilder.createRandomLoadBalancer();
         CommandExecutor commandExecutor = new RestyCommandExecutor(restyCommandContext, serverContext);
         FallbackExecutor fallbackExecutor = new FallbackExecutor();
@@ -92,29 +92,6 @@ public class DefaultRestyProxyInvokeHandler implements InvocationHandler {
 
         //TODO method返回基本类型，如果返回的是null会报错，待验证
     }
-
-
-    private Object handleReturnValue(Type returnType) {
-        String typeName = returnType.getTypeName();
-        ObjectMapper objectMapper = RestyProxyProperties.getDefaultProperties().getObjectMapper();
-
-
-        switch (typeName) {
-            case "java.lang.Object":
-                return new Object();
-            case "void":
-                return null;
-            case "int":
-                return 0;
-            case "java.lang.Integer":
-                return 0;
-            case "java.lang.String":
-                return "result";
-            default:
-                return null;
-        }
-    }
-
 
     private boolean isSpecialMethod(Method method) {
         return "equals".equals(method.getName())

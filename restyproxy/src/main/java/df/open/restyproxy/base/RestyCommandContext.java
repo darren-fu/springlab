@@ -1,16 +1,22 @@
 package df.open.restyproxy.base;
 
+import com.google.common.collect.HashBasedTable;
 import df.open.restyproxy.annotation.RestyMethod;
 import df.open.restyproxy.annotation.RestyService;
 import df.open.restyproxy.annotation.processor.RestyMethodProcessor;
 import df.open.restyproxy.annotation.processor.RestyServiceProcessor;
+import df.open.restyproxy.command.RestyCommandConfig;
+import df.open.restyproxy.command.refresh.ConfigRefresh;
+import df.open.restyproxy.command.refresh.RefreshCommandConfig;
 import df.open.restyproxy.http.client.HttpClientHolder;
 import df.open.restyproxy.http.config.AsyncHttpConfigFactory;
-import df.open.restyproxy.command.RestyCommandConfig;
 import df.open.restyproxy.wrapper.spring.SpringAnnotationWrapper;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.asynchttpclient.AsyncHttpClient;
 
 import java.lang.reflect.Method;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,7 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 存储各种依赖数据
  * Created by darrenfu on 17-6-21.
  */
-public class RestyCommandContext {
+@Slf4j
+public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> {
 
     // 服务与注解 map
     private ConcurrentHashMap<Class, RestyService> serviceMetaDataMap;
@@ -31,19 +38,25 @@ public class RestyCommandContext {
     // serviceName与HttpClient map
     private ConcurrentHashMap<String, HttpClientHolder> httpClientPool;
 
+    //method -> requestTemplate
     private ConcurrentHashMap<Method, RestyRequestTemplate> requestTemplateMap;
+
+    // serviceName -> path -> method
+    private HashBasedTable<String, String, Method> serviceMethodTable;
+
     // 注解处理器
     private RestyServiceProcessor serviceProcessor;
     private RestyMethodProcessor methodProcessor;
 
     private RestyCommandContext() {
-        serviceMetaDataMap = new ConcurrentHashMap<>();
-        methodMetaDataMap = new ConcurrentHashMap<>();
-        commandPropertiesMap = new ConcurrentHashMap<>();
-        serviceProcessor = new RestyServiceProcessor();
-        methodProcessor = new RestyMethodProcessor();
-        requestTemplateMap = new ConcurrentHashMap<>();
-        httpClientPool = new ConcurrentHashMap<>();
+        this.serviceMetaDataMap = new ConcurrentHashMap<>();
+        this.methodMetaDataMap = new ConcurrentHashMap<>();
+        this.commandPropertiesMap = new ConcurrentHashMap<>();
+        this.serviceProcessor = new RestyServiceProcessor();
+        this.methodProcessor = new RestyMethodProcessor();
+        this.requestTemplateMap = new ConcurrentHashMap<>();
+        this.httpClientPool = new ConcurrentHashMap<>();
+        serviceMethodTable = HashBasedTable.create();
     }
 
     /**
@@ -92,9 +105,15 @@ public class RestyCommandContext {
         if (restyService == null) {
             return;
         }
+        String serviceName = restyService.serviceName();
+        // serviceName -> Set<Method>
+        Set<Method> methodSet = new HashSet<>();
+        Collections.addAll(methodSet, serviceClz.getMethods());
+
+        // class->@RestyService
         this.storeRestyService(serviceClz, restyService);
         HttpClientHolder clientHolder = new HttpClientHolder(AsyncHttpConfigFactory.getConfig());
-        httpClientPool.putIfAbsent(restyService.serviceName(), clientHolder);
+        httpClientPool.putIfAbsent(serviceName, clientHolder);
 
 
         SpringAnnotationWrapper wrapper = new SpringAnnotationWrapper();
@@ -107,8 +126,10 @@ public class RestyCommandContext {
             // 存储 httpMethod 和 requestTemplate
             RestyRequestTemplate restyRequestTemplate = wrapper.processAnnotation(serviceClz, method);
             requestTemplateMap.put(method, restyRequestTemplate);
+
+            serviceMethodTable.put(serviceName, restyRequestTemplate.getPath(), method);
         }
-        System.out.println("RestyCommandContext初始化成功！");
+        log.info("RestyCommandContext初始化成功！");
     }
 
     /**
@@ -139,6 +160,37 @@ public class RestyCommandContext {
      */
     public RestyCommandConfig getCommandProperties(Method method) {
         return commandPropertiesMap.get(method);
+    }
+
+    /**
+     * Gets command properties.
+     *
+     * @param serviceName the service name
+     * @param path        the path
+     * @return the command properties
+     */
+    public List<RestyCommandConfig> getCommandProperties(String serviceName, String path) {
+        if (StringUtils.isEmpty(serviceName)) {
+            return Collections.EMPTY_LIST;
+        }
+        List<RestyCommandConfig> configList = new ArrayList<>();
+        // path为空，获取service下所有method对应的config
+        if (StringUtils.isEmpty(path)) {
+            Map<String, Method> row = serviceMethodTable.row(serviceName);
+            for (Method method : row.values()) {
+                RestyCommandConfig config = commandPropertiesMap.get(method);
+                if (config != null) {
+                    configList.add(commandPropertiesMap.get(method));
+                }
+            }
+        } else {
+            Method method = serviceMethodTable.get(serviceName, path);
+            if (method == null && commandPropertiesMap.get(method) != null) {
+                configList.add(commandPropertiesMap.get(method));
+            }
+        }
+
+        return configList;
     }
 
 
@@ -178,4 +230,13 @@ public class RestyCommandContext {
         return requestTemplateMap.get(restyMethod);
     }
 
+    @Override
+    public boolean refresh(RefreshCommandConfig refreshCommandConfig) {
+        List<RestyCommandConfig> configList = this.getCommandProperties(refreshCommandConfig.getServiceName(), refreshCommandConfig.getPath());
+        for (RestyCommandConfig config : configList) {
+            config.refresh(refreshCommandConfig);
+        }
+
+        return true;
+    }
 }

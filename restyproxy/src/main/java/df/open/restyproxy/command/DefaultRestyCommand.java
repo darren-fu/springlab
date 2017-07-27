@@ -4,10 +4,9 @@ import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyRequestTemplate;
 import df.open.restyproxy.cb.CircuitBreaker;
 import df.open.restyproxy.exception.RestyException;
-import df.open.restyproxy.lb.ServerInstance;
+import df.open.restyproxy.lb.server.ServerInstance;
 import df.open.restyproxy.util.StringBuilderFactory;
 import lombok.Data;
-import lombok.ToString;
 import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
 
@@ -77,7 +76,6 @@ public class DefaultRestyCommand implements RestyCommand {
      */
     private String serviceName;
 
-
     private RestyCommandStatus status;
 
     private RestyException exception;
@@ -87,6 +85,8 @@ public class DefaultRestyCommand implements RestyCommand {
     private CircuitBreaker circuitBreaker;
 
     private ServerInstance instance;
+
+    private Uri uri;
 
     public DefaultRestyCommand(Class serviceClz,
                                Method serviceMethod,
@@ -101,7 +101,7 @@ public class DefaultRestyCommand implements RestyCommand {
         this.status = RestyCommandStatus.INIT;
 
         if (context.getCommandProperties(serviceMethod) == null) {
-            throw new RuntimeException("缺少CommandProperties，无法初始化RestyCommand");
+            throw new IllegalArgumentException("缺少CommandProperties，无法初始化RestyCommand");
         }
 
         this.restyCommandConfig = context.getCommandProperties(serviceMethod);
@@ -115,13 +115,15 @@ public class DefaultRestyCommand implements RestyCommand {
 
     @Override
     public Uri getUri(ServerInstance serverInstance) {
-
-        return new Uri(serverInstance.isHttps() ? HTTPS : HTTP,
-                null,
-                serverInstance.getHost(),
-                serverInstance.getPort(),
-                path,
-                paramsToString());
+        if (uri == null) {
+            uri = new Uri(serverInstance.isHttps() ? HTTPS : HTTP,
+                    null,
+                    serverInstance.getHost(),
+                    serverInstance.getPort(),
+                    path,
+                    paramsToString());
+        }
+        return uri;
 
     }
 

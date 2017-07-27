@@ -1,12 +1,12 @@
-package df.open.restyproxy.lb;
+package df.open.restyproxy.lb.server;
 
 /**
+ * ServerContext 工厂类
  * Created by darrenfu on 17-6-28.
  */
 public class ServerContextBuilder {
 
-
-    public static ServerContext createConfigableServerContext() {
+    public static ServerContext createConfigurableServerContext() {
         return new ConfigurableServerContext();
     }
 }

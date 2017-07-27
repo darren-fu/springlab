@@ -2,7 +2,7 @@ package df.open.restyproxy.command;
 
 import df.open.restyproxy.cb.CircuitBreaker;
 import df.open.restyproxy.exception.RestyException;
-import df.open.restyproxy.lb.ServerInstance;
+import df.open.restyproxy.lb.server.ServerInstance;
 
 /**
  * RestyCommand生命周期

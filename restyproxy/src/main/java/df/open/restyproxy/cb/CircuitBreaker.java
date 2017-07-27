@@ -2,7 +2,7 @@ package df.open.restyproxy.cb;
 
 import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.event.EventConsumer;
-import df.open.restyproxy.lb.ServerInstance;
+import df.open.restyproxy.lb.server.ServerInstance;
 
 import java.util.Set;
 
@@ -39,19 +39,27 @@ public interface CircuitBreaker extends EventConsumer {
     Set<String> getBrokenServer();
 
     /**
-     * The enum Status.
+     * The enum BreakerStatus.
      */
-    enum Status {
+    enum BreakerStatus {
         /**
          * Open status.
          */
-        OPEN(), /**
+        OPEN(),
+        /**
          * Break status.
          */
-        BREAK(), /**
-         * Halfopen status.
+        BREAK(),
+        /**
+         * HalfOpen status.
          */
-        HALFOPEN()
+        HALF_OPEN(),
+
+        /**
+         * 强制短路
+         */
+        FORCE_BREAK()
+
 
     }
 

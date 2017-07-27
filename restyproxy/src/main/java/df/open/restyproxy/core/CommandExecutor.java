@@ -10,6 +10,8 @@ import df.open.restyproxy.command.RestyCommand;
 public interface CommandExecutor {
 
 
+    int order();
+
     /**
      * Executable boolean.
      *

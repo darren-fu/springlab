@@ -12,10 +12,8 @@ import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
 import df.open.restyproxy.http.converter.StringResponseConverter;
 import df.open.restyproxy.lb.LoadBalancer;
-import df.open.restyproxy.lb.ServerContext;
-import df.open.restyproxy.lb.ServerInstance;
-import org.asynchttpclient.BoundRequestBuilder;
-import org.asynchttpclient.Request;
+import df.open.restyproxy.lb.server.ServerContext;
+import df.open.restyproxy.lb.server.ServerInstance;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.uri.Uri;
 
@@ -26,11 +24,6 @@ import java.util.*;
  * Created by darrenfu on 17-7-1.
  */
 public class RestyCommandExecutor implements CommandExecutor {
-
-    /**
-     * Async Http 请求
-     */
-    private Request request;
 
     /**
      * Resty请求上下文
@@ -54,6 +47,10 @@ public class RestyCommandExecutor implements CommandExecutor {
         converterList.add(new StringResponseConverter());
     }
 
+    @Override
+    public int order() {
+        return 0;
+    }
 
     @Override
     public boolean executable(RestyCommand restyCommand) {
@@ -63,23 +60,22 @@ public class RestyCommandExecutor implements CommandExecutor {
     @Override
     public Object execute(LoadBalancer lb, RestyCommand restyCommand) {
 
-
+        // 重试次数
         int retry = restyCommand.getRestyCommandConfig().getRetry();
 
         Object result = null;
         CircuitBreaker circuitBreaker = CircuitBreakerFactory.defaultCircuitBreaker(restyCommand.getServiceName());
         ServerInstance serverInstance = null;
 
+        // 排除 彻底断路的server， 尝试过的server
+        // 1.判断command使用的serverInstanceList是否存在被熔断的server
+        // 1.1 存在的话 server加入 loadBalance 的excludeServerList
+
         Set<String> excludeInstanceIdList = circuitBreaker.getBrokenServer();
 
+        // 重试机制
         for (int times = 0; times <= retry; times++) {
             try {
-
-
-                // 0.command = path + serviceName
-                // 1.判断command使用的serverInstanceList是否存在被熔断的server
-                // 1.1 存在的话 server加入 loadBalance 的excludeServerList
-
                 // 负载均衡器 选择可用服务实例
                 serverInstance = lb.choose(serverContext, restyCommand, excludeInstanceIdList);
 
@@ -101,6 +97,10 @@ public class RestyCommandExecutor implements CommandExecutor {
                     throw restyCommand.getFailException();
                 }
 
+                if (restyCommand.getStatus() == RestyCommandStatus.SUCCESS) {
+                    // 响应成功，无需重试了
+                    break;
+                }
             } catch (Exception ex) {
                 if (times == retry) {
                     System.out.println("##重试了:" + times + " 次，到达最大值:" + retry);
@@ -120,22 +120,6 @@ public class RestyCommandExecutor implements CommandExecutor {
             }
         }
         return result;
-    }
-
-    /**
-     * 构建Request
-     *
-     * @param instance
-     * @param restyCommand
-     */
-    private void buildRequest(ServerInstance instance, RestyCommand restyCommand) {
-
-        BoundRequestBuilder requestBuilder = new BoundRequestBuilder(context.getHttpClient(restyCommand.getServiceName()),
-                restyCommand.getHttpMethod(),
-                true);
-        requestBuilder.setUri(restyCommand.getUri(instance));
-        requestBuilder.setSingleHeaders(restyCommand.getRequestTemplate().getHeaders());
-        this.request = requestBuilder.build();
     }
 
 

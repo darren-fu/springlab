@@ -25,12 +25,12 @@ public class ProxyServiceImpl implements ProxyService {
     @Override
     public String getStatus() {
         System.out.println("执行基本降级");
-        return null;
+        return "Fallback";
     }
 
     public String getStatus(RestyException ex) {
         System.out.println("执行加强降级，Ex:" + ex.getMessage());
-        return null;
+        return "Enhance Fallback";
     }
 
     @Override
