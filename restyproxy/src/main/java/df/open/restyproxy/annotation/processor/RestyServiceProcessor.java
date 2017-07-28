@@ -11,6 +11,7 @@ import java.lang.annotation.Annotation;
  * 设置RestyCommandConfig
  * Created by darrenfu on 17-6-24.
  */
+@SuppressWarnings("WeakerAccess")
 public class RestyServiceProcessor implements RestyAnnotationProcessor {
 
 
@@ -32,7 +33,13 @@ public class RestyServiceProcessor implements RestyAnnotationProcessor {
         return properties;
     }
 
-    private void setServiceName(RestyService restyService, RestyCommandConfig properties) {
+    /**
+     * Sets service name.
+     *
+     * @param restyService the resty service
+     * @param properties   the properties
+     */
+    protected void setServiceName(RestyService restyService, RestyCommandConfig properties) {
         String serviceName = restyService.serviceName();
         if (StringUtils.isEmpty(serviceName)) {
             throw new IllegalArgumentException("service name can not be null");
@@ -40,7 +47,13 @@ public class RestyServiceProcessor implements RestyAnnotationProcessor {
         properties.setServiceName(serviceName);
     }
 
-    private void setRetry(RestyService restyService, RestyCommandConfig properties) {
+    /**
+     * Sets retry.
+     *
+     * @param restyService the resty service
+     * @param properties   the properties
+     */
+    protected void setRetry(RestyService restyService, RestyCommandConfig properties) {
         int retry = restyService.retry();
         if (retry < 0) {
             throw new IllegalArgumentException("retry must >0");
@@ -50,7 +63,13 @@ public class RestyServiceProcessor implements RestyAnnotationProcessor {
 
     }
 
-    private void setFallback(RestyService restyService, RestyCommandConfig properties) {
+    /**
+     * Sets fallback.
+     *
+     * @param restyService the resty service
+     * @param properties   the properties
+     */
+    protected void setFallback(RestyService restyService, RestyCommandConfig properties) {
         properties.setFallbackEnabled(restyService.fallbackEnabled());
 
         //fallback class
@@ -61,7 +80,13 @@ public class RestyServiceProcessor implements RestyAnnotationProcessor {
         }
     }
 
-    private void setCircuitBreak(RestyService restyService, RestyCommandConfig properties) {
+    /**
+     * Sets circuit break.
+     *
+     * @param restyService the resty service
+     * @param properties   the properties
+     */
+    protected void setCircuitBreak(RestyService restyService, RestyCommandConfig properties) {
         // circuit break
         properties.setCircuitBreakEnabled(restyService.circuitBreakEnabled());
 

@@ -49,6 +49,13 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
+    public String update(Long id, String name, User user) {
+        System.out.println("执行基本降级");
+
+        return "FALLBACK";
+    }
+
+    @Override
     public void applicationIndex() {
 
     }

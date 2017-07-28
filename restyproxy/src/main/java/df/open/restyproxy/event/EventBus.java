@@ -11,6 +11,7 @@ import java.util.function.Consumer;
  * 事件总线
  * Created by darrenfu on 17-7-23.
  */
+@SuppressWarnings("WeakerAccess")
 @Slf4j
 public class EventBus {
 
@@ -22,7 +23,7 @@ public class EventBus {
      * @param event    the event
      * @param consumer the consumer
      */
-    public static void registerEventAndConsumer(String event, Consumer consumer) {
+    static void registerEventAndConsumer(String event, Consumer consumer) {
         // 不存在 event
         if (!eventMap.containsKey(event)) {
             //
@@ -53,7 +54,8 @@ public class EventBus {
      * @param event the event
      * @param obj   the obj
      */
-    public static <T> void emitEvent(String event, T obj) {
+    @SuppressWarnings("unchecked")
+    static <T> void emitEvent(String event, T obj) {
 
         List<Consumer> consumers = eventMap.get(event);
         if (consumers != null && eventMap.size() > 0) {

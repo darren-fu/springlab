@@ -1,9 +1,12 @@
-package df.open.restyproxy.proxy;
+package df.open.restyproxy.starter.proxy;
 
-import df.open.restyproxy.base.RestyCommandContext;
+import df.open.restyproxy.command.RestyCommandContext;
 import lombok.Data;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 
 import java.lang.reflect.Proxy;
@@ -22,11 +25,13 @@ import java.lang.reflect.Proxy;
  * @date 2016/11/22
  */
 @Data
-public class RestyProxyBeanFactory implements FactoryBean<Object>, InitializingBean {
+public class RestyProxyBeanFactory implements FactoryBean<Object>, InitializingBean, ApplicationContextAware {
 
     private Class<?> type;
 
     private RestyCommandContext restyCommandContext;
+
+    private ApplicationContext applicationContext;
 
     @Override
     public Object getObject() throws Exception {
@@ -57,5 +62,10 @@ public class RestyProxyBeanFactory implements FactoryBean<Object>, InitializingB
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(type, "type不能为空");
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }

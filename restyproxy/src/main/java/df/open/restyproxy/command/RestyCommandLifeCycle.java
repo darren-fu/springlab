@@ -1,6 +1,7 @@
 package df.open.restyproxy.command;
 
 import df.open.restyproxy.cb.CircuitBreaker;
+import df.open.restyproxy.enums.RestyCommandStatus;
 import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.lb.server.ServerInstance;
 

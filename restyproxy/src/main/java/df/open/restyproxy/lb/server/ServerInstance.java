@@ -1,6 +1,6 @@
 package df.open.restyproxy.lb.server;
 
-import df.open.restyproxy.base.RestyConsts;
+import df.open.restyproxy.base.RestyConst;
 import df.open.restyproxy.util.StringBuilderFactory;
 import lombok.Data;
 import org.asynchttpclient.uri.Uri;
@@ -74,7 +74,7 @@ public class ServerInstance {
         instance.setPort(port);
         instance.setStartTime(new Date());
         instance.setAlive(true);
-        instance.setRoom(RestyConsts.ROOM_DEFAULT);
+        instance.setRoom(RestyConst.ROOM_DEFAULT);
         instance.setHttps(false);
 
         StringBuilder sb = StringBuilderFactory.DEFAULT.stringBuilder();

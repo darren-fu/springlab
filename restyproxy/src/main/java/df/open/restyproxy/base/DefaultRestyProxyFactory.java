@@ -1,5 +1,6 @@
 package df.open.restyproxy.base;
 
+import df.open.restyproxy.command.RestyCommandContext;
 import df.open.restyproxy.core.CommandExecutor;
 import df.open.restyproxy.lb.server.ServerContext;
 

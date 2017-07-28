@@ -1,23 +1,22 @@
 package df.open.restyproxy.core;
 
-import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.cb.CircuitBreaker;
 import df.open.restyproxy.cb.CircuitBreakerFactory;
 import df.open.restyproxy.command.RestyCommand;
-import df.open.restyproxy.command.RestyCommandStatus;
+import df.open.restyproxy.command.RestyCommandContext;
 import df.open.restyproxy.command.RestyFuture;
+import df.open.restyproxy.enums.RestyCommandStatus;
 import df.open.restyproxy.exception.CircuitBreakException;
-import df.open.restyproxy.http.converter.JsonResponseConverter;
-import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
-import df.open.restyproxy.http.converter.StringResponseConverter;
 import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.lb.server.ServerContext;
 import df.open.restyproxy.lb.server.ServerInstance;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.uri.Uri;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 异步Resty请求执行器
@@ -36,15 +35,9 @@ public class RestyCommandExecutor implements CommandExecutor {
     private ServerContext serverContext;
 
 
-    private List<ResponseConverter> converterList;
-
     public RestyCommandExecutor(RestyCommandContext context, ServerContext serverContext) {
         this.context = context;
         this.serverContext = serverContext;
-
-        this.converterList = new ArrayList<>();
-        converterList.add(new JsonResponseConverter());
-        converterList.add(new StringResponseConverter());
     }
 
     @Override

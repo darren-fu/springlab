@@ -1,18 +1,17 @@
 package df.open.restyproxy.command;
 
-import df.open.restyproxy.base.RestyCommandContext;
 import df.open.restyproxy.base.RestyRequestTemplate;
 import df.open.restyproxy.cb.CircuitBreaker;
+import df.open.restyproxy.enums.RestyCommandStatus;
 import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.lb.server.ServerInstance;
-import df.open.restyproxy.util.StringBuilderFactory;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.*;
 import org.asynchttpclient.uri.Uri;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Set;
 
 /**
  * .init command
@@ -25,6 +24,7 @@ import java.util.Set;
  * Created by darrenfu on 17-6-20.
  */
 @Data
+@Slf4j
 public class DefaultRestyCommand implements RestyCommand {
 
     /**
@@ -34,6 +34,7 @@ public class DefaultRestyCommand implements RestyCommand {
 
     /**
      * command请求路径 [requestTemplate]
+     * 如果有PathVariable，此处的path获取的是原始路径(如:/find/{name})，而不是参数替换后的路径
      */
     private String path;
 
@@ -76,17 +77,36 @@ public class DefaultRestyCommand implements RestyCommand {
      */
     private String serviceName;
 
+    /**
+     * 状态
+     */
     private RestyCommandStatus status;
 
+    /**
+     * 导致Command失败的异常
+     */
     private RestyException exception;
 
+    /**
+     * 向服务请求的request
+     */
     private Request request;
 
+    /**
+     * Uri
+     */
+    private Uri uri;
+
+    /**
+     * 使用的断路器
+     */
     private CircuitBreaker circuitBreaker;
 
+    /**
+     * command执行访问的服务实例（最后一次）
+     */
     private ServerInstance instance;
 
-    private Uri uri;
 
     public DefaultRestyCommand(Class serviceClz,
                                Method serviceMethod,
@@ -120,46 +140,20 @@ public class DefaultRestyCommand implements RestyCommand {
                     null,
                     serverInstance.getHost(),
                     serverInstance.getPort(),
-                    path,
-                    paramsToString());
+                    requestTemplate.getRequestPath(args),
+                    requestTemplate.getQueryString(args));
         }
         return uri;
-
-    }
-
-    private String paramsToString() {
-        if (this.requestTemplate.getParams() == null || this.requestTemplate.getParams().size() == 0) {
-            return null;
-        }
-        Set<String> paramNames = this.requestTemplate.getParams().keySet();
-        StringBuilder sb = StringBuilderFactory.DEFAULT.stringBuilder();
-        for (int i = 0; i < paramNames.size(); i++) {
-
-        }
-        int i = 0;
-        for (String paramName : paramNames) {
-            if (i != 0) {
-                sb.append("&");
-            }
-            Object paramValue = this.requestTemplate.getParams().getOrDefault(paramName, "");
-            sb.append(paramName);
-            sb.append("=");
-            sb.append(paramValue);
-            i = 1;
-        }
-        return sb.toString();
     }
 
 
     @Override
     public RestyCommandStatus getStatus() {
-
         return this.status;
     }
 
     @Override
     public RestyCommand ready(CircuitBreaker cb) {
-
         this.circuitBreaker = cb;
         this.status = RestyCommandStatus.READY;
         return this;
@@ -169,19 +163,21 @@ public class DefaultRestyCommand implements RestyCommand {
     public RestyFuture start(ServerInstance instance) {
         this.status = RestyCommandStatus.STARTED;
         this.instance = instance;
-//        boolean shouldBreak = circuitBreaker.shouldPass(this, instance);
-        // TODO fallback
+
         AsyncHttpClient httpClient = context.getHttpClient(this.getServiceName());
         BoundRequestBuilder requestBuilder = new BoundRequestBuilder(httpClient,
                 httpMethod,
                 true);
-        requestBuilder.setUri(getUri(instance));
-        requestBuilder.setSingleHeaders(getRequestTemplate().getHeaders());
+        requestBuilder.setUri(this.getUri(instance));
+        requestBuilder.setSingleHeaders(requestTemplate.getHeaders());
+        requestBuilder.setBody(requestTemplate.getBody(args));
         this.request = requestBuilder.build();
         ListenableFuture<Response> future = httpClient.executeRequest(request);
 
+        log.debug("Request:{}", request);
         return new RestyFuture(this, future);
     }
+
 
     @Override
     public String getInstanceId() {

@@ -10,6 +10,7 @@ import java.util.Set;
  * 断路器
  * Created by darrenfu on 17-7-22.
  */
+@SuppressWarnings("unused")
 public interface CircuitBreaker extends EventConsumer {
 
     /**
@@ -37,30 +38,5 @@ public interface CircuitBreaker extends EventConsumer {
      * @return the broken server
      */
     Set<String> getBrokenServer();
-
-    /**
-     * The enum BreakerStatus.
-     */
-    enum BreakerStatus {
-        /**
-         * Open status.
-         */
-        OPEN(),
-        /**
-         * Break status.
-         */
-        BREAK(),
-        /**
-         * HalfOpen status.
-         */
-        HALF_OPEN(),
-
-        /**
-         * 强制短路
-         */
-        FORCE_BREAK()
-
-
-    }
 
 }

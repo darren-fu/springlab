@@ -6,6 +6,7 @@ import df.open.rest.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class RestfulController {
 
     @Autowired(required = false)
     private ILoadBalancer loadBalancer;
+    @Autowired
+    private HttpServletRequest request;
 
     @RequestMapping(value = "/index")
     public Response index(@RequestParam(value = "name", required = false) String name) {
@@ -56,6 +59,16 @@ public class RestfulController {
         response.setMsg("OK!");
         response.setInfo("age is 20");
         return response;
+    }
+
+    @RequestMapping(value = "/update/{name}", method = RequestMethod.POST)
+    public String update(@RequestParam("id") Long id, @PathVariable String name, @RequestBody User user) {
+        System.out.println(user);
+        System.out.println(name);
+
+        System.out.println(id);
+        System.out.println("URI:" + request.getRequestURI());
+        return "UPDATED";
     }
 
 

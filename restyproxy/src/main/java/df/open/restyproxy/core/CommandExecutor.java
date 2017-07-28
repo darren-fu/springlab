@@ -7,9 +7,15 @@ import df.open.restyproxy.command.RestyCommand;
  * 执行器
  * Created by darrenfu on 17-7-1.
  */
+@SuppressWarnings("unused")
 public interface CommandExecutor {
 
 
+    /**
+     * 数字越小，在前面执行
+     *
+     * @return the int
+     */
     int order();
 
     /**

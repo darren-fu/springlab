@@ -16,5 +16,4 @@ public interface EventEmit {
     default <T> void emit(String event, T obj) {
         EventBus.emitEvent(event, obj);
     }
-
 }

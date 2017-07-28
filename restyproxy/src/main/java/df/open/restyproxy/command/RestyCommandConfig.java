@@ -1,47 +1,131 @@
 package df.open.restyproxy.command;
 
-import df.open.restyproxy.command.refresh.ConfigRefresh;
-import df.open.restyproxy.command.refresh.RefreshCommandConfig;
+import df.open.restyproxy.command.update.Updater;
+import df.open.restyproxy.command.update.UpdatedCommandConfig;
 
 /**
  * Resty请求的配置
  * Created by darrenfu on 17-6-21.
  */
-public interface RestyCommandConfig extends ConfigRefresh<RefreshCommandConfig> {
+@SuppressWarnings("unused")
+public interface RestyCommandConfig extends Updater<UpdatedCommandConfig> {
 
+    /**
+     * 获取服务名称
+     *
+     * @return the service name
+     */
     String getServiceName();
 
+    /**
+     * 设置服务名称
+     *
+     * @param serviceName the service name
+     */
     void setServiceName(String serviceName);
 
+    /**
+     * Is async enabled boolean.
+     *
+     * @return the boolean
+     */
     boolean isAsyncEnabled();
 
+    /**
+     * Is circuit break enabled boolean.
+     *
+     * @return the boolean
+     */
     boolean isCircuitBreakEnabled();
 
+    /**
+     * Is force break enabled boolean.
+     *
+     * @return the boolean
+     */
     boolean isForceBreakEnabled();
 
+    /**
+     * Is fallback enabled boolean.
+     *
+     * @return the boolean
+     */
     boolean isFallbackEnabled();
 
+    /**
+     * Gets fallback class.
+     *
+     * @return the fallback class
+     */
     Class getFallbackClass();
 
+    /**
+     * Gets fallback bean.
+     *
+     * @return the fallback bean
+     */
     String getFallbackBean();
 
+    /**
+     * Gets retry.
+     *
+     * @return the retry
+     */
     int getRetry();
 
+    /**
+     * Sets async enabled.
+     *
+     * @param asyncEnabled the async enabled
+     */
     void setAsyncEnabled(boolean asyncEnabled);
 
+    /**
+     * Sets circuit break enabled.
+     *
+     * @param enableCircuitBreak the enable circuit break
+     */
     void setCircuitBreakEnabled(boolean enableCircuitBreak);
 
+    /**
+     * Sets force break enabled.
+     *
+     * @param forceBreakEnabled the force break enabled
+     */
     void setForceBreakEnabled(boolean forceBreakEnabled);
 
+    /**
+     * Sets fallback enabled.
+     *
+     * @param enableFallback the enable fallback
+     */
     void setFallbackEnabled(boolean enableFallback);
 
+    /**
+     * Sets fallback class.
+     *
+     * @param fallbackClass the fallback class
+     */
     void setFallbackClass(Class fallbackClass);
 
+    /**
+     * Sets fallback bean.
+     *
+     * @param fallbackBean the fallback bean
+     */
     void setFallbackBean(String fallbackBean);
 
+    /**
+     * Sets retry.
+     *
+     * @param retry the retry
+     */
     void setRetry(int retry);
 
 
+    /**
+     * The type Default resty command config.
+     */
     class DefaultRestyCommandConfig implements RestyCommandConfig {
 
         private String serviceName;
@@ -129,13 +213,13 @@ public interface RestyCommandConfig extends ConfigRefresh<RefreshCommandConfig> 
 
 
         @Override
-        public boolean refresh(RefreshCommandConfig refreshCommandConfig) {
+        public boolean refresh(UpdatedCommandConfig updatedCommandConfig) {
 
-            if (refreshCommandConfig.getCircuitBreakEnabled() != null) {
-                this.setCircuitBreakEnabled(refreshCommandConfig.getCircuitBreakEnabled());
+            if (updatedCommandConfig.getCircuitBreakEnabled() != null) {
+                this.setCircuitBreakEnabled(updatedCommandConfig.getCircuitBreakEnabled());
             }
-            if (refreshCommandConfig.getFallbackEnabled() != null) {
-                this.setFallbackEnabled(refreshCommandConfig.getFallbackEnabled());
+            if (updatedCommandConfig.getFallbackEnabled() != null) {
+                this.setFallbackEnabled(updatedCommandConfig.getFallbackEnabled());
             }
             return true;
         }

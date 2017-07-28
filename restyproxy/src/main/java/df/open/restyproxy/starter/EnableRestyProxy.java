@@ -1,8 +1,8 @@
-package df.open.restyproxy.annotation;
+package df.open.restyproxy.starter;
 
 import df.open.restyproxy.base.DefaultRestyProxyFactory;
 import df.open.restyproxy.base.RestyProxyFactory;
-import df.open.restyproxy.proxy.RestyProxyRegister;
+import df.open.restyproxy.starter.proxy.RestyProxyRegister;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

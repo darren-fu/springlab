@@ -1,8 +1,8 @@
-package df.open.restyproxy.proxy;
+package df.open.restyproxy.starter.proxy;
 
-import df.open.restyproxy.annotation.EnableRestyProxy;
+import df.open.restyproxy.starter.EnableRestyProxy;
 import df.open.restyproxy.annotation.RestyService;
-import df.open.restyproxy.base.RestyCommandContext;
+import df.open.restyproxy.command.RestyCommandContext;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;

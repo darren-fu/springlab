@@ -4,6 +4,7 @@ package df.open.restyproxy.util;
  * Class工具类
  * Created by darrenfu on 17-7-23.
  */
+@SuppressWarnings("unused")
 public class ClassTools {
 
     /**

@@ -3,8 +3,7 @@ package df.open.restyproxy.core;
 import df.open.restyproxy.annotation.RestyService;
 import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.command.RestyCommandConfig;
-import df.open.restyproxy.command.RestyCommandStatus;
-import df.open.restyproxy.core.CommandExecutor;
+import df.open.restyproxy.enums.RestyCommandStatus;
 import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.lb.LoadBalancer;
 import df.open.restyproxy.util.ClassTools;
@@ -56,33 +55,34 @@ public class FallbackExecutor implements CommandExecutor {
                     fallbackObj = existObj;
                 }
             }
-            Method fallbackMethod = findMethodInFallbackClass(fallbackClass, restyCommand);
             try {
-                return fallbackMethod.invoke(fallbackObj, copyArgsWithException(restyCommand));
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
+                return findAndInvokeMethodInFallbackClass(fallbackClass, restyCommand, fallbackObj);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                log.warn("调用降级服务出错:{}", e);
             }
+
         }
         return null;
     }
 
 
-    private Method findMethodInFallbackClass(Class fallbackClass,
-                                             RestyCommand restyCommand) {
+    private Object findAndInvokeMethodInFallbackClass(Class fallbackClass,
+                                                      RestyCommand restyCommand,
+                                                      Object fallbackObj) throws InvocationTargetException, IllegalAccessException {
         Method serviceMethod = restyCommand.getServiceMethod();
         String methodName = serviceMethod.getName();
 
 
         Method method = getMethod(fallbackClass, methodName, copyParamsWithException(restyCommand));
-        if (method == null) {
-            method = getMethod(fallbackClass, methodName, serviceMethod.getParameterTypes());
-            if (method == null) {
-                log.error("{}中没有发现合适的降级方法:{}", fallbackClass, methodName);
-                throw new RuntimeException(fallbackClass + "没有合适的降级方法:" + methodName);
-            }
+        if (method != null) {
+            return invokeMethod(method, fallbackObj, copyArgsWithException(restyCommand));
         }
-        return method;
-
+        method = getMethod(fallbackClass, methodName, serviceMethod.getParameterTypes());
+        if (method == null) {
+            log.error("{}中没有发现合适的降级方法:{}", fallbackClass, methodName);
+            throw new RuntimeException(fallbackClass + "没有合适的降级方法:" + methodName);
+        }
+        return invokeMethod(method, fallbackObj, restyCommand.getArgs());
     }
 
 
@@ -90,9 +90,12 @@ public class FallbackExecutor implements CommandExecutor {
         try {
             return clz.getMethod(methodName, paramTypes);
         } catch (NoSuchMethodException e) {
-            log.warn("类{}中没有找到方法:{}", clz, methodName);
             return null;
         }
+    }
+
+    private Object invokeMethod(Method method, Object obj, Object[] args) throws InvocationTargetException, IllegalAccessException {
+        return method.invoke(obj, args);
     }
 
     private Class<?>[] copyParamsWithException(RestyCommand restyCommand) {

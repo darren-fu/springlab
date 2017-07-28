@@ -27,7 +27,7 @@ import java.util.List;
 @RestyService(serviceName = "resty",
         fallbackClass = ProxyServiceImpl.class,
         retry = 1,
-        forceBreakEnabled = true
+        forceBreakEnabled = false
 )
 //@RestyService(serviceName = "resty", retry = 2)
 @RequestMapping(value = "/resty")
@@ -46,5 +46,9 @@ public interface ProxyService extends ApplicationService {
     Response<String> getAge(@RequestParam("id") Long id, String code, @PathVariable(value = "name") String name);
 
     int getHeight(Long id);
+
+    @RestyMethod
+    @RequestMapping(value = "/update/{name}", method = RequestMethod.POST)
+    String update(@RequestParam("id") Long id, @PathVariable(value = "name") String name, User user);
 
 }

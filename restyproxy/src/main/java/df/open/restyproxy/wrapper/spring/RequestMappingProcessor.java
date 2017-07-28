@@ -70,27 +70,23 @@ public class RequestMappingProcessor implements AnnotationProcessor {
         return false;
     }
 
-    private void parseHeaders(RestyRequestTemplate md, Method method,
+    private void parseHeaders(RestyRequestTemplate requestTemplate, Method method,
                               RequestMapping annotation) {
         // TODO: only supports one header value per key
-        if (annotation.headers() != null && annotation.headers().length > 0) {
-            for (String header : annotation.headers()) {
-                int index = header.indexOf('=');
-                md.addHeader(resolve(header.substring(0, index)),
-                        resolve(header.substring(index + 1).trim()));
-            }
+        for (String header : annotation.headers()) {
+            int index = header.indexOf('=');
+            requestTemplate.addHeader(resolve(header.substring(0, index)),
+                    resolve(header.substring(index + 1).trim()));
         }
     }
 
-    private void parseParams(RestyRequestTemplate md, Method method,
+    private void parseParams(RestyRequestTemplate requestTemplate, Method method,
                              RequestMapping annotation) {
         // TODO: only supports one header value per key
-        if (annotation.params() != null && annotation.params().length > 0) {
-            for (String param : annotation.params()) {
-                int index = param.indexOf('=');
-                md.addParam(resolve(param.substring(0, index)),
-                        resolve(param.substring(index + 1).trim()));
-            }
+        for (String param : annotation.params()) {
+            int index = param.indexOf('=');
+            requestTemplate.addParam(resolve(param.substring(0, index)),
+                    resolve(param.substring(index + 1).trim()));
         }
     }
 

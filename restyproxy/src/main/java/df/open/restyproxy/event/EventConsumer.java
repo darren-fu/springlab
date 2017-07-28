@@ -6,6 +6,7 @@ import java.util.function.Consumer;
  * event consumer
  * Created by darrenfu on 17-7-23.
  */
+@SuppressWarnings("unused")
 public interface EventConsumer {
 
     /**

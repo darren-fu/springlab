@@ -1,8 +1,6 @@
-package df.open.restyproxy.proxy;
+package df.open.restyproxy.starter.proxy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import df.open.restyproxy.base.RestyCommandContext;
-import df.open.restyproxy.base.RestyProxyProperties;
+import df.open.restyproxy.command.RestyCommandContext;
 import df.open.restyproxy.command.DefaultRestyCommand;
 import df.open.restyproxy.command.RestyCommand;
 import df.open.restyproxy.core.RestyCommandExecutor;
@@ -21,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,13 +41,9 @@ public class RestyProxyInvokeHandler implements InvocationHandler {
 
     private RestyCommandContext restyCommandContext;
 
-    private List<ResponseConverter> converterList;
 
     public RestyProxyInvokeHandler(RestyCommandContext restyCommandContext) {
         this.restyCommandContext = restyCommandContext;
-        this.converterList = new ArrayList<>();
-        converterList.add(new JsonResponseConverter());
-        converterList.add(new StringResponseConverter());
     }
 
 

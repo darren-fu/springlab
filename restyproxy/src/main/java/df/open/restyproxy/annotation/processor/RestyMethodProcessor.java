@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
  * 设置并覆盖 RestyCommandConfig
  * Created by darrenfu on 17-6-24.
  */
+@SuppressWarnings("WeakerAccess")
 public class RestyMethodProcessor implements RestyAnnotationProcessor {
 
 
@@ -32,7 +33,13 @@ public class RestyMethodProcessor implements RestyAnnotationProcessor {
     }
 
 
-    private void setRetry(RestyMethod restyMethod, RestyCommandConfig properties) {
+    /**
+     * Sets retry.
+     *
+     * @param restyMethod the resty method
+     * @param properties  the properties
+     */
+    protected void setRetry(RestyMethod restyMethod, RestyCommandConfig properties) {
         int retry = restyMethod.retry();
         if (retry >= 0) {
             properties.setRetry(retry);
@@ -40,7 +47,13 @@ public class RestyMethodProcessor implements RestyAnnotationProcessor {
     }
 
 
-    private void setFallbackEnabled(RestyMethod restyMethod, RestyCommandConfig properties) {
+    /**
+     * Sets fallback enabled.
+     *
+     * @param restyMethod the resty method
+     * @param properties  the properties
+     */
+    protected void setFallbackEnabled(RestyMethod restyMethod, RestyCommandConfig properties) {
         String fallbackEnabled = restyMethod.fallbackEnabled();
         if ("true".equalsIgnoreCase(fallbackEnabled)) {
             properties.setFallbackEnabled(true);
@@ -49,7 +62,13 @@ public class RestyMethodProcessor implements RestyAnnotationProcessor {
         }
     }
 
-    private void setCircuitBreakEnabled(RestyMethod restyMethod, RestyCommandConfig properties) {
+    /**
+     * Sets circuit break enabled.
+     *
+     * @param restyMethod the resty method
+     * @param properties  the properties
+     */
+    protected void setCircuitBreakEnabled(RestyMethod restyMethod, RestyCommandConfig properties) {
         String circuitBreakEnabled = restyMethod.circuitBreakEnabled();
         if ("true".equalsIgnoreCase(circuitBreakEnabled)) {
             properties.setCircuitBreakEnabled(true);

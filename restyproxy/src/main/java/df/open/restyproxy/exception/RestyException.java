@@ -5,6 +5,7 @@ package df.open.restyproxy.exception;
  * <p>
  * Created by darrenfu on 17-7-22.
  */
+@SuppressWarnings("unused")
 public class RestyException extends RuntimeException {
 
     private static String RESTY_EXCEPTION_CODE = "RESTY_EXCEPTION";

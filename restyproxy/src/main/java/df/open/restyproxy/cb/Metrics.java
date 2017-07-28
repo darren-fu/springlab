@@ -13,20 +13,31 @@ import java.util.concurrent.locks.ReentrantLock;
  * 线程不安全
  * Created by darrenfu on 17-7-24.
  */
+@SuppressWarnings("WeakerAccess")
 public class Metrics {
 
     /**
      * The constant DEFAULT_PERIOD_MILLISECONDS.
      */
-    public static final Long DEFAULT_PERIOD_MILLISECONDS = 1000 * 30L;
+    private static final Long DEFAULT_PERIOD_MILLISECONDS = 1000 * 30L;
     /**
      * The constant DEFAULT_MAX_SEGMENT_NUMBER.
      */
-    public static final Integer DEFAULT_MAX_SEGMENT_NUMBER = 10;
+    private static final Integer DEFAULT_MAX_SEGMENT_NUMBER = 10;
 
+    /**
+     * 分段计数器 链表
+     */
     private Deque<SegmentMetrics> metricsDeque;
 
+    /**
+     * 计数器分段周期
+     */
     private Long period;
+
+    /**
+     * 最大分段数量
+     */
     private Integer maxSegmentNumber;
 
 
@@ -58,6 +69,7 @@ public class Metrics {
      * @param success the success
      * @return the segment metrics
      */
+    @SuppressWarnings("UnusedReturnValue")
     public SegmentMetrics store(boolean success, boolean forceUseNewMetrics) {
         SegmentMetrics firstMetrics = getMetrics();
         if (success) {

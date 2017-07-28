@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
  * Resty请求命令
  * Created by darrenfu on 17-6-26.
  */
+@SuppressWarnings("unused")
 public interface RestyCommand extends RestyCommandLifeCycle, EventEmit {
 
     /**

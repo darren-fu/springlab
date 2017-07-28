@@ -1,11 +1,9 @@
 package df.open.restyproxy.command;
 
 import df.open.restyproxy.exception.ConnectionException;
-import df.open.restyproxy.exception.RestyException;
 import df.open.restyproxy.http.converter.ResponseConverter;
 import df.open.restyproxy.http.converter.ResponseConverterContext;
 import df.open.restyproxy.http.pojo.FailedResponse;
-import df.open.restyproxy.util.FutureTools;
 import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
@@ -17,6 +15,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
+ * Resty Future
+ * 异步获取RestyCommand的响应结果
  * Created by darrenfu on 17-7-20.
  */
 @Slf4j

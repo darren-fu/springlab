@@ -1,7 +1,6 @@
 package df.open.restyproxy.http.pojo;
 
 import df.open.restyproxy.exception.RestyException;
-import df.open.restyproxy.util.FutureTools;
 import io.netty.handler.codec.http.HttpHeaders;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.cookie.Cookie;

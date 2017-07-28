@@ -1,13 +1,13 @@
-package df.open.restyproxy.base;
+package df.open.restyproxy.command;
 
 import com.google.common.collect.HashBasedTable;
 import df.open.restyproxy.annotation.RestyMethod;
 import df.open.restyproxy.annotation.RestyService;
 import df.open.restyproxy.annotation.processor.RestyMethodProcessor;
 import df.open.restyproxy.annotation.processor.RestyServiceProcessor;
-import df.open.restyproxy.command.RestyCommandConfig;
-import df.open.restyproxy.command.refresh.ConfigRefresh;
-import df.open.restyproxy.command.refresh.RefreshCommandConfig;
+import df.open.restyproxy.base.RestyRequestTemplate;
+import df.open.restyproxy.command.update.UpdatedCommandConfig;
+import df.open.restyproxy.command.update.Updater;
 import df.open.restyproxy.http.client.HttpClientHolder;
 import df.open.restyproxy.http.config.AsyncHttpConfigFactory;
 import df.open.restyproxy.wrapper.spring.SpringAnnotationWrapper;
@@ -16,7 +16,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.asynchttpclient.AsyncHttpClient;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,28 +27,49 @@ import java.util.concurrent.ConcurrentHashMap;
  * 存储各种依赖数据
  * Created by darrenfu on 17-6-21.
  */
+@SuppressWarnings("WeakerAccess")
 @Slf4j
-public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> {
+public class RestyCommandContext implements Updater<UpdatedCommandConfig> {
 
-    // 服务与注解 map
+    /**
+     * 服务与注解 map
+     */
     private ConcurrentHashMap<Class, RestyService> serviceMetaDataMap;
 
-    // method与注解 map
+    /**
+     * method -> 注解 map
+     */
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private ConcurrentHashMap<Method, RestyMethod> methodMetaDataMap;
 
-    // method与commandProperties map
+    /**
+     * method -> RestyCommandConfig map
+     */
     private ConcurrentHashMap<Method, RestyCommandConfig> commandPropertiesMap;
-    // serviceName与HttpClient map
+
+    /**
+     * serviceName -> HttpClient map
+     */
     private ConcurrentHashMap<String, HttpClientHolder> httpClientPool;
 
-    //method -> requestTemplate
+    /**
+     * method -> requestTemplate
+     */
     private ConcurrentHashMap<Method, RestyRequestTemplate> requestTemplateMap;
 
-    // serviceName -> path -> method
+    /**
+     * serviceName -> path -> method
+     */
     private HashBasedTable<String, String, Method> serviceMethodTable;
 
-    // 注解处理器
+    /**
+     * 注解处理器
+     */
     private RestyServiceProcessor serviceProcessor;
+
+    /**
+     * 注解处理器
+     */
     private RestyMethodProcessor methodProcessor;
 
     private RestyCommandContext() {
@@ -106,9 +130,6 @@ public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> 
             return;
         }
         String serviceName = restyService.serviceName();
-        // serviceName -> Set<Method>
-        Set<Method> methodSet = new HashSet<>();
-        Collections.addAll(methodSet, serviceClz.getMethods());
 
         // class->@RestyService
         this.storeRestyService(serviceClz, restyService);
@@ -134,10 +155,13 @@ public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> 
 
     /**
      * 处理Resty 注解,生成 RestyCommandConfig
+     * 合并RestyService和RestyMethod中的配置
      *
-     * @param restyService
-     * @param method
-     * @return
+     * @param restyService service注解
+     * @param method       方法
+     * @return RestyCommandConfig
+     * @see RestyService
+     * @see RestyMethod
      */
     private RestyCommandConfig processRestyAnnotation(RestyService restyService, Method method) {
         RestyCommandConfig commandProperties = new RestyCommandConfig.DefaultRestyCommandConfig();
@@ -169,7 +193,8 @@ public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> 
      * @param path        the path
      * @return the command properties
      */
-    public List<RestyCommandConfig> getCommandProperties(String serviceName, String path) {
+    @SuppressWarnings("unchecked")
+    protected List<RestyCommandConfig> getCommandProperties(String serviceName, String path) {
         if (StringUtils.isEmpty(serviceName)) {
             return Collections.EMPTY_LIST;
         }
@@ -185,7 +210,7 @@ public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> 
             }
         } else {
             Method method = serviceMethodTable.get(serviceName, path);
-            if (method == null && commandPropertiesMap.get(method) != null) {
+            if (method != null && commandPropertiesMap.get(method) != null) {
                 configList.add(commandPropertiesMap.get(method));
             }
         }
@@ -200,6 +225,7 @@ public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> 
      * @param clz the clz
      * @return the resty service
      */
+    @SuppressWarnings("unused")
     public RestyService getRestyService(Class clz) {
         return serviceMetaDataMap.get(clz);
     }
@@ -231,10 +257,10 @@ public class RestyCommandContext implements ConfigRefresh<RefreshCommandConfig> 
     }
 
     @Override
-    public boolean refresh(RefreshCommandConfig refreshCommandConfig) {
-        List<RestyCommandConfig> configList = this.getCommandProperties(refreshCommandConfig.getServiceName(), refreshCommandConfig.getPath());
+    public boolean refresh(UpdatedCommandConfig updatedCommandConfig) {
+        List<RestyCommandConfig> configList = this.getCommandProperties(updatedCommandConfig.getServiceName(), updatedCommandConfig.getPath());
         for (RestyCommandConfig config : configList) {
-            config.refresh(refreshCommandConfig);
+            config.refresh(updatedCommandConfig);
         }
 
         return true;
