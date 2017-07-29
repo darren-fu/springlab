@@ -1,7 +1,6 @@
 package df.open.spring.service.impl;
 
-import df.open.restyproxy.exception.RestyException;
-import df.open.spring.service.Data;
+import df.open.restypass.exception.RestyException;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
 import df.open.spring.service.User;

@@ -1,6 +1,6 @@
 package df.open.spring.base;
 
-import df.open.restyproxy.exception.RestyException;
+import df.open.restypass.exception.RestyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

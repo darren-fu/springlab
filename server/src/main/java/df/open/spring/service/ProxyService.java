@@ -1,14 +1,13 @@
 package df.open.spring.service;
 
-import df.open.restyproxy.annotation.RestyMethod;
-import df.open.restyproxy.annotation.RestyService;
+import df.open.restypass.annotation.RestyMethod;
+import df.open.restypass.annotation.RestyService;
 import df.open.spring.service.impl.ProxyServiceImpl;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 /**

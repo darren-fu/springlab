@@ -1,8 +1,8 @@
 package df.open.spring;
 
-import df.open.restyproxy.starter.EnableRestyProxy;
-import df.open.restyproxy.command.RestyCommandContext;
-import df.open.restyproxy.command.update.UpdatedCommandConfig;
+import df.open.restypass.starter.EnableRestyProxy;
+import df.open.restypass.command.RestyCommandContext;
+import df.open.restypass.command.update.UpdateCommandConfig;
 import df.open.spring.service.ProxyService;
 import df.open.spring.service.Response;
 import df.open.spring.service.User;
@@ -76,7 +76,7 @@ public class ServerApplication implements EmbeddedServletContainerCustomizer {
 
     @RequestMapping("/refresh")
     public String refresh() {
-        UpdatedCommandConfig commandConfig = new UpdatedCommandConfig();
+        UpdateCommandConfig commandConfig = new UpdateCommandConfig();
         commandConfig.setServiceName("resty");
         //        commandConfig.setPath();
         commandConfig.setCircuitBreakEnabled(false);
