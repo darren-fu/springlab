@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 //@EnableInterfaceProxy
 @Configuration
 @ComponentScan(basePackages = {"df.open"})
-
 public class ServerApplication implements EmbeddedServletContainerCustomizer {
 
 //    @Autowired
