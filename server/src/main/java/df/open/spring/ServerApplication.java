@@ -1,7 +1,5 @@
 package df.open.spring;
 
-import df.open.spring.proxy.EnableInterfaceProxy;
-import df.open.spring.proxy.InterfaceProxyConfig;
 import df.open.spring.service.ProxyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,7 +7,10 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,17 +28,18 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @RestController
-@EnableInterfaceProxy
+//@EnableInterfaceProxy
+@Configuration
+@ComponentScan(basePackages = {"df.open"})
+
 public class ServerApplication implements EmbeddedServletContainerCustomizer {
 
-    @Autowired
-    private InterfaceProxyConfig interfaceProxyConfig;
+//    @Autowired
+//    private InterfaceProxyConfig interfaceProxyConfig;
 
     @Autowired
     private ProxyService proxyService;
 
-
-    private RedisTemplate redisTemplate;
 
     public static void main(String[] args) {
         SpringApplicationBuilder appBuilder = new SpringApplicationBuilder();
@@ -61,4 +63,14 @@ public class ServerApplication implements EmbeddedServletContainerCustomizer {
         System.out.println(proxyService.getHeight(10L));
         return res;
     }
+
+//    @Autowired
+//    private RedisTemplate redisTemplate;
+//
+//    @Bean
+//    public RedisCacheManager cacheManager() {
+//        System.out.println("xsdsadsadsa");
+//        RedisCacheManager redisCacheManager = new RedisCacheManager(redisTemplate);
+//        return redisCacheManager;
+//    }
 }
