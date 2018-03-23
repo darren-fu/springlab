@@ -37,8 +37,8 @@ public class TestCache {
         System.out.println(proxyService.getStatus());
         System.out.println("####################");
         System.out.println(proxyService.getStatus());
-        System.out.println("####################");
-        System.out.println(proxyService.getStatus());
+//        System.out.println("####################");
+//        System.out.println(proxyService.getStatus());
 
     }
 

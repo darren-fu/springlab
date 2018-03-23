@@ -3,7 +3,8 @@ package df.open.spring.config;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.mockito.internal.util.collections.ArrayUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
@@ -12,12 +13,8 @@ import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 
@@ -27,11 +24,32 @@ import java.lang.reflect.Method;
  * author: fuliang
  * date: 2018/3/15
  */
-@Configuration
-//@EnableAspectJAutoProxy
-@EnableCaching(mode = AdviceMode.ASPECTJ,order = 0)
-//@EnableCaching(mode = AdviceMode.PROXY,order = Ordered.HIGHEST_PRECEDENCE)
+
+//@EnableCaching(mode = AdviceMode.PROXY,order = Ordered.LOWEST_PRECEDENCE)
 public class CacheConfig extends CachingConfigurerSupport {
+
+
+    @Configuration
+    @ConditionalOnMissingClass(value = {"org.springframework.cache.aspectj.AspectJCachingConfiguration"})
+    @EnableCaching(mode = AdviceMode.PROXY, order = 0)
+    public static class CacheConfigProxy extends CacheConfig {
+        @Bean
+        public Object typeConfig(){
+            System.out.println("CacheConfigProxy...");
+            return new Object();
+        }
+    }
+
+    @Configuration
+    @ConditionalOnClass(name = {"org.aspectj.weaver.AnnotationAJ","org.springframework.cache.aspectj.AspectJCachingConfiguration"})
+    @EnableCaching(mode = AdviceMode.ASPECTJ, order = 0)
+    public static class CacheConfigAspectj extends CacheConfig {
+        @Bean
+        public Object typeConfig(){
+            System.out.println("CacheConfigAspectj...");
+            return new Object();
+        }
+    }
 
 
     @Bean
@@ -49,6 +67,7 @@ public class CacheConfig extends CachingConfigurerSupport {
             }
         };
     }
+
     @SuppressWarnings("SpringJavaAutowiringInspection")
     @Bean
 //    @ConditionalOnExpression("'${#redisConnectionFactory}'!= null")

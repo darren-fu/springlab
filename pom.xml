@@ -10,7 +10,6 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>server</module>
-        <module>proxy</module>
     </modules>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -42,21 +41,6 @@
                 <!--<version>4.3.3</version>-->
             <!--</dependency>-->
 
-            <dependency>
-                <groupId>da.open.scdb</groupId>
-                <artifactId>service-common</artifactId>
-                <version>${scdb.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>da.open.scdb</groupId>
-                <artifactId>service-server</artifactId>
-                <version>${scdb.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>da.open.scdb</groupId>
-                <artifactId>config-support</artifactId>
-                <version>${scdb.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>io.springfox</groupId>
@@ -78,11 +62,6 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>5.1.39</version>
                 <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>1.2.12</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
